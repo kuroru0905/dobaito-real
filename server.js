@@ -6,9 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static('.'));
 
-// 🚀 IPv4対応版の接続文字列（pooler.supabase.com を使用）
-// これならRenderの無料サーバーからでも確実に繋がるぜ！
-const connectionString = "postgresql://postgres:Shake0905-db@db.sktxupbkynhlddgjxsvr.pooler.supabase.com:5432/postgres";
+// 🚀 ついに手に入れた IPv4対応・Pooler経由の接続文字列だ！
+// ポートが 6543 になっているのがポイントだぜ。
+const connectionString = "postgresql://postgres.sktxupbkynhlddgjxsvr:Shake0905-db@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres";
 
 const pool = new Pool({
     connectionString: connectionString,
@@ -29,29 +29,23 @@ const pool = new Pool({
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("✅ Supabase PostgreSQL に接続成功！IPv4通信で安定稼働中だぜ。");
+        console.log("✅ 【祝】Supabase PostgreSQL に接続成功！データは永遠に不滅だぜ！");
     } catch (err) {
-        console.error("❌ データベース接続エラーだ。通信設定を確認しろ！:", err);
+        console.error("❌ 接続エラー。だがお前なら超えられる！:", err);
     }
 })();
 
-// 1. ログイン画面を表示
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-
-// 2. 全レビューを取得（新着順）
+// API: 全レビューを取得
 app.get('/api/reviews', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM reviews ORDER BY id DESC');
         res.json(result.rows);
     } catch (err) {
-        console.error("データ取得エラー:", err);
-        res.status(500).json({ error: "データ取得に失敗したぜ" });
+        res.status(500).json({ error: "取得失敗" });
     }
 });
 
-// 3. レビューを投稿
+// API: レビューを投稿
 app.post('/api/reviews', async (req, res) => {
     const { area, shop, content } = req.body;
     try {
@@ -61,32 +55,18 @@ app.post('/api/reviews', async (req, res) => {
         );
         res.json({ message: 'Success' });
     } catch (err) {
-        console.error("投稿エラー:", err);
-        res.status(500).json({ error: "投稿に失敗したぜ" });
+        res.status(500).json({ error: "投稿失敗" });
     }
 });
 
-// 4. 管理者ログイン（パスワード：Shake0905）
+// 管理者ログイン
 app.post('/api/admin/login', (req, res) => {
-    const { password } = req.body;
-    if (password === 'Shake0905') {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ success: false });
-    }
+    if (req.body.password === 'Shake0905') return res.json({ success: true });
+    res.status(401).json({ success: false });
 });
 
-// 5. レビューを削除（管理者専用）
-app.delete('/api/reviews/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
-        res.json({ message: 'Deleted' });
-    } catch (err) {
-        console.error("削除エラー:", err);
-        res.status(500).json({ error: "削除に失敗したぜ" });
-    }
-});
+// ログイン画面表示
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
