@@ -7,14 +7,23 @@
     <style>
         :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
-        header { background-color: var(--hokkaido-blue); color: white; padding: 2rem 1rem; text-align: center; }
+        header { background-color: var(--hokkaido-blue); color: white; padding: 2.5rem 1rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .post-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        /* ⚠️ 注意喚起スタイル */
+        .warning-box { 
+            background: #fff5f5; border: 1px solid #feb2b2; padding: 1rem; 
+            border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #c53030;
+        }
+        .warning-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
+
         .form-group { margin-bottom: 1rem; }
         input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; transition: 0.3s; }
+        .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .submit-btn:hover { background-color: #e60000; }
         
+        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; }
         .review-card.high-rated {
             border-left: 10px solid var(--jojo-purple);
             box-shadow: 0 0 15px rgba(75, 0, 130, 0.4);
@@ -23,38 +32,47 @@
         .review-card.high-rated::before {
             content: "ゴゴゴゴゴ…";
             position: absolute; bottom: 5px; right: 10px;
-            font-size: 1.5rem; font-weight: bold; color: rgba(0, 0, 0, 0.15); font-style: italic; z-index: 0;
+            font-size: 1.5rem; font-weight: bold; color: rgba(0, 0, 0, 0.15); font-style: italic;
         }
-
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.1rem; }
         .like-btn {
             background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue);
-            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s;
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;
         }
-        .like-btn:hover { background: var(--hokkaido-blue); color: white; }
     </style>
 </head>
 <body>
 
 <header>
     <h1>🏔️ 道バイト・リアル</h1>
-    <p>北海道のバイト選びに、嘘はいらない。</p>
+    <p style="font-size: 1.2rem; font-weight: bold; margin-top: 10px;">
+        働いていた時のリアルを匿名で共有しよう！
+    </p>
+    <p style="font-size: 0.9rem; opacity: 0.9;">北海道のバイト選びに、嘘はいらない。</p>
 </header>
 
 <div class="container">
     <section class="post-section">
+        <h2>📢 現場のリアルを投稿する</h2>
+        
+        <div class="warning-box">
+            <strong>【投稿の掟：礼儀を忘れるな】</strong>
+            個人を特定する情報の掲載、および悪意ある誹謗中傷は「再起不能（リタイア）」だぜ。
+            事実に基づいたリアルな体験談を投稿してくれ。不適切な投稿は管理者が速やかに削除する。
+        </div>
+
         <div class="form-group">
-            <label>エリア</label>
             <select id="postArea">
-                <option value="">選択してください</option>
+                <option value="">エリアを選択してください</option>
                 <option value="道央">道央</option><option value="道南">道南</option>
                 <option value="道北">道北</option><option value="道東">道東</option>
             </select>
         </div>
-        <div class="form-group"><label>店名</label><input type="text" id="postShop" placeholder="例：〇〇居酒屋 札幌店"></div>
-        <div class="form-group"><label>内容</label><textarea id="postContent" rows="4" placeholder="冬の除雪の実態など..."></textarea></div>
+        <div class="form-group"><input type="text" id="postShop" placeholder="店名（例：〇〇居酒屋 札幌店）"></div>
+        <div class="form-group"><textarea id="postContent" rows="4" placeholder="まかないの有無、店長の圧、冬の除雪の辛さなど..."></textarea></div>
         <button class="submit-btn" onclick="addReview()">現実を投稿する</button>
     </section>
+
     <div id="reviewList"></div>
 </div>
 
@@ -87,7 +105,7 @@
         const area = document.getElementById('postArea').value;
         const shop = document.getElementById('postShop').value.trim();
         const content = document.getElementById('postContent').value.trim();
-        if (!area || !shop || !content) return alert("全部入力してくれ！");
+        if (!area || !shop || !content) return alert("全ての項目を埋めてくれ！");
         await fetch('/api/reviews', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,14 +120,14 @@
     }
 
     async function reportReview(id) {
-        const reason = prompt("削除を依頼する理由を入力してくれ（例：虚偽、店名間違いなど）");
+        const reason = prompt("削除を依頼する理由を入力（例：店名間違い、虚偽など）");
         if (!reason) return;
-        const response = await fetch(`/api/reviews/${id}/report`, {
+        await fetch(`/api/reviews/${id}/report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reason })
         });
-        if (response.ok) alert("依頼を受け付けたぜ！");
+        alert("管理者に報告したぜ。確認するまで待ってな。");
     }
 </script>
 </body>
