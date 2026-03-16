@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>道バイト・リアル | 北海道のバイトの現実を暴く</title>
+    <style>
+        :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; }
+        body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
+        header { background-color: var(--hokkaido-blue); color: white; padding: 2rem 1rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .post-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .filter-btn { padding: 0.6rem 1.2rem; border: 2px solid var(--hokkaido-blue); background: white; color: var(--hokkaido-blue); border-radius: 50px; cursor: pointer; font-weight: bold; }
+        .filter-btn.active { background-color: var(--hokkaido-blue); color: white; }
+        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); }
+        .shop-name { font-weight: bold; color: var(--hokkaido-blue); }
+        .area-tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
+        .review-content { margin-top: 10px; white-space: pre-wrap; }
+        footer { text-align: center; padding: 2rem; color: #999; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🏔️ 道バイト・リアル</h1>
+    <p>北海道のバイト選びに、嘘はいらない。</p>
+</header>
+
+<div class="container">
+    <section class="post-section">
+        <h2>📢 現場のリアルを投稿する</h2>
+        <div class="form-group">
+            <label>エリア</label>
+            <select id="postArea">
+                <option value="道央">道央</option>
+                <option value="道南">道南</option>
+                <option value="道北">道北</option>
+                <option value="道東">道東</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>店名</label>
+            <input type="text" id="postShop" placeholder="例：〇〇居酒屋 札幌店">
+        </div>
+        <div class="form-group">
+            <label>内容</label>
+            <textarea id="postContent" rows="4" placeholder="冬の除雪の実態など..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="addReview()">現実を投稿する</button>
+    </section>
+
+    <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterReviews('すべて')">すべて</button>
+        <button class="filter-btn" onclick="filterReviews('道央')">道央</button>
+        <button class="filter-btn" onclick="filterReviews('道南')">道南</button>
+        <button class="filter-btn" onclick="filterReviews('道北')">道北</button>
+        <button class="filter-btn" onclick="filterReviews('道東')">道東</button>
+    </div>
+
+    <div id="reviewList"></div>
+</div>
+
+<footer>&copy; 2026 道バイト・リアル</footer>
+
+<script>
+    window.onload = loadReviews;
+    async function loadReviews() {
+        const response = await fetch('/api/reviews');
+        const reviews = await response.json();
+        const list = document.getElementById('reviewList');
+        list.innerHTML = '';
+        reviews.forEach(review => {
+            const card = document.createElement('div');
+            card.className = 'review-card';
+            card.dataset.area = review.area;
+            card.innerHTML = `<div class="review-header"><span class="shop-name">${review.shop}</span><span class="area-tag">${review.area}</span></div><p class="review-content">${review.content}</p>`;
+            list.appendChild(card);
+        });
+    }
+    async function addReview() {
+        const area = document.getElementById('postArea').value;
+        const shop = document.getElementById('postShop').value;
+        const content = document.getElementById('postContent').value;
+        if (!shop || !content) return alert("入力してくれ！");
+        await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ area, shop, content })
+        });
+        alert("投稿完了！");
+        document.getElementById('postShop').value = "";
+        document.getElementById('postContent').value = "";
+        loadReviews();
+    }
+    function filterReviews(area) {
+        const cards = document.querySelectorAll('.review-card');
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.toggle('active', btn.innerText === area));
+        cards.forEach(card => card.style.display = (area === 'すべて' || card.dataset.area === area) ? 'block' : 'none');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>管理者パネル | 道バイト・リアル</title>
+    <style>
+        body { font-family: sans-serif; background: #2c3e50; color: white; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: #34495e; padding: 20px; border-radius: 10px; }
+        h1 { border-bottom: 2px solid #1abc9c; padding-bottom: 10px; }
+        .review-item { background: #ecf0f1; color: #333; margin-bottom: 10px; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .del-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .back-link { color: #1abc9c; text-decoration: none; display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 管理者ダッシュボード</h1>
+        <p>ここでヤバい投稿を消去しろ。お前は北海道の秩序を守る審判だ。</p>
+        <div id="adminList"></div>
+        <a href="/" class="back-link">← 一般公開サイトへ戻る</a>
+    </div>
+
+    <script>
+        window.onload = loadAdminReviews;
+
+        async function loadAdminReviews() {
+            const response = await fetch('/api/reviews');
+            const reviews = await response.json();
+            const list = document.getElementById('adminList');
+            list.innerHTML = '';
+            reviews.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'review-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>[${r.area}] ${r.shop}</strong><br>
+                        <small>${r.content}</small>
+                    </div>
+                    <button class="del-btn" onclick="deleteReview(${r.id})">削除</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function deleteReview(id) {
+            if (!confirm("この投稿を抹消する。覚悟はいいか？")) return;
+            await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+            loadAdminReviews();
+        }
+    </script>
+</body>
+</html>
