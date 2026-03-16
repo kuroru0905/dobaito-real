@@ -7,11 +7,23 @@
     <style>
         :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
-        header { background-color: var(--hokkaido-blue); color: white; padding: 2.5rem 1rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* 🚀 魂のヘッダー：背景画像 ＆ グラデーション */
+        header { 
+            background-image: linear-gradient(rgba(0, 86, 179, 0.7), rgba(0, 86, 179, 0.8)), 
+                              url('header-bg.jpg'); 
+            background-size: cover;
+            background-position: center;
+            color: white; 
+            padding: 4rem 1rem; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+        }
+
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .post-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        /* ⚠️ 注意喚起スタイル */
+        /* ⚠️ 掟（注意喚起）スタイル */
         .warning-box { 
             background: #fff5f5; border: 1px solid #feb2b2; padding: 1rem; 
             border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #c53030;
@@ -23,7 +35,9 @@
         .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .submit-btn:hover { background-color: #e60000; }
         
-        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; }
+        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; transition: 0.3s; }
+        
+        /* 🔥 高評価「ゴゴゴ」デザイン */
         .review-card.high-rated {
             border-left: 10px solid var(--jojo-purple);
             box-shadow: 0 0 15px rgba(75, 0, 130, 0.4);
@@ -32,13 +46,17 @@
         .review-card.high-rated::before {
             content: "ゴゴゴゴゴ…";
             position: absolute; bottom: 5px; right: 10px;
-            font-size: 1.5rem; font-weight: bold; color: rgba(0, 0, 0, 0.15); font-style: italic;
+            font-size: 1.5rem; font-weight: bold; color: rgba(0, 0, 0, 0.15); font-style: italic; z-index: 0;
         }
+
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.1rem; }
         .like-btn {
             background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue);
-            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s;
         }
+        .like-btn:hover { background: var(--hokkaido-blue); color: white; }
+        
+        footer { text-align: center; padding: 2rem; color: #999; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -76,9 +94,12 @@
     <div id="reviewList"></div>
 </div>
 
+<footer>&copy; 2026 道バイト・リアル</footer>
+
 <script>
     window.onload = loadReviews;
 
+    // 1. レビュー一覧の読み込み
     async function loadReviews() {
         const response = await fetch('/api/reviews');
         const reviews = await response.json();
@@ -86,13 +107,17 @@
         list.innerHTML = '';
         reviews.forEach(review => {
             const card = document.createElement('div');
+            // 3以上の評価で「ゴゴゴ」オーラ
             const isHighRated = (review.likes || 0) >= 3 ? 'high-rated' : '';
             card.className = `review-card ${isHighRated}`;
             
             card.innerHTML = `
-                <div class="review-header"><span class="shop-name">${review.shop}</span><span style="background:#eee; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-left:10px;">${review.area}</span></div>
-                <p class="review-content" style="margin-top:10px; white-space:pre-wrap;">${review.content}</p>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="review-header">
+                    <span class="shop-name">${review.shop}</span>
+                    <span style="background:#eee; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-left:10px;">${review.area}</span>
+                </div>
+                <p class="review-content" style="margin-top:10px; white-space:pre-wrap; position:relative; z-index:1;">${review.content}</p>
+                <div style="display: flex; gap: 10px; align-items: center; position:relative; z-index:1;">
                     <button class="like-btn" onclick="likeReview(${review.id})">🏔️ 道！ (${review.likes || 0})</button>
                     <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer; margin-top:10px;">🚩 削除依頼</button>
                 </div>
@@ -101,11 +126,14 @@
         });
     }
 
+    // 2. 新規投稿
     async function addReview() {
         const area = document.getElementById('postArea').value;
         const shop = document.getElementById('postShop').value.trim();
         const content = document.getElementById('postContent').value.trim();
+
         if (!area || !shop || !content) return alert("全ての項目を埋めてくれ！");
+
         await fetch('/api/reviews', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -114,14 +142,17 @@
         location.reload();
     }
 
+    // 3. 「道！」ボタン（評価）
     async function likeReview(id) {
-        await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
-        loadReviews();
+        const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
+        if (response.ok) loadReviews();
     }
 
+    // 4. 削除依頼（通報）
     async function reportReview(id) {
         const reason = prompt("削除を依頼する理由を入力（例：店名間違い、虚偽など）");
         if (!reason) return;
+
         await fetch(`/api/reviews/${id}/report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
