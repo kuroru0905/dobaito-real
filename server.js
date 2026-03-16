@@ -1,23 +1,23 @@
 const express = require('express');
-const { Pool } = require('pg'); // PostgreSQL用のライブラリ
+const { Pool } = require('pg');
 const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(express.static('.'));
 
-// 🚀 Supabaseへの接続文字列
-// [YOUR-PASSWORD] の部分をお前のデータベースパスワードに置き換えた完成版だぜ
-const connectionString = "postgresql://postgres:Shake0905-db@db.sktxupbkynhlddgjxsvr.supabase.co:5432/postgres";
+// 🚀 IPv4対応版の接続文字列（pooler.supabase.com を使用）
+// これならRenderの無料サーバーからでも確実に繋がるぜ！
+const connectionString = "postgresql://postgres:Shake0905-db@db.sktxupbkynhlddgjxsvr.pooler.supabase.com:5432/postgres";
 
 const pool = new Pool({
     connectionString: connectionString,
     ssl: { 
-        rejectUnauthorized: false // Renderなどの外部サーバーから接続する際に必須の設定だ
+        rejectUnauthorized: false 
     }
 });
 
-// データベースのテーブル作成（初回のみ実行される）
+// データベースのテーブル作成
 (async () => {
     try {
         await pool.query(`
@@ -29,9 +29,9 @@ const pool = new Pool({
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("✅ Supabase PostgreSQL に接続成功！テーブルの準備も完了だぜ。");
+        console.log("✅ Supabase PostgreSQL に接続成功！IPv4通信で安定稼働中だぜ。");
     } catch (err) {
-        console.error("❌ データベース接続エラーだ。パスワードかURIを見直せ！:", err);
+        console.error("❌ データベース接続エラーだ。通信設定を確認しろ！:", err);
     }
 })();
 
@@ -46,6 +46,7 @@ app.get('/api/reviews', async (req, res) => {
         const result = await pool.query('SELECT * FROM reviews ORDER BY id DESC');
         res.json(result.rows);
     } catch (err) {
+        console.error("データ取得エラー:", err);
         res.status(500).json({ error: "データ取得に失敗したぜ" });
     }
 });
@@ -60,6 +61,7 @@ app.post('/api/reviews', async (req, res) => {
         );
         res.json({ message: 'Success' });
     } catch (err) {
+        console.error("投稿エラー:", err);
         res.status(500).json({ error: "投稿に失敗したぜ" });
     }
 });
@@ -81,13 +83,12 @@ app.delete('/api/reviews/:id', async (req, res) => {
         await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
         res.json({ message: 'Deleted' });
     } catch (err) {
+        console.error("削除エラー:", err);
         res.status(500).json({ error: "削除に失敗したぜ" });
     }
 });
 
-// サーバー起動設定
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🏔️ 道バイト・リアル 稼働中！`);
-    console.log(`Port: ${PORT}`);
 });
