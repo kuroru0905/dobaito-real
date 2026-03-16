@@ -68,8 +68,8 @@ app.delete('/api/reviews/:id', async (req, res) => {
     res.json({ message: 'Deleted' });
 });
 
-app.listen(3000, () => {
-    console.log('道バイト・リアル 稼働中！');
-    console.log('一般画面: http://localhost:3000');
-    console.log('管理用: http://localhost:3000/login');
+// server.js の最後
+const PORT = process.env.PORT || 3000; // サーバーが指定した番号、なければ3000を使うという意味
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`道バイト・リアル 稼働中！ Port: ${PORT}`);
 });
