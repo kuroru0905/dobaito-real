@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>道バイト・リアル | 北海道のバイトの現実を暴く</title>
+    <title>道バイト・リアル | 現場の圧を、見逃すな</title>
     <style>
-        :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; }
+        :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
         header { background-color: var(--hokkaido-blue); color: white; padding: 2rem 1rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -14,13 +14,32 @@
         label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .filter-btn { padding: 0.6rem 1.2rem; border: 2px solid var(--hokkaido-blue); background: white; color: var(--hokkaido-blue); border-radius: 50px; cursor: pointer; font-weight: bold; }
-        .filter-btn.active { background-color: var(--hokkaido-blue); color: white; }
-        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); }
-        .shop-name { font-weight: bold; color: var(--hokkaido-blue); }
+        
+        .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; transition: 0.3s; }
+        
+        /* 🔥 高評価「ゴゴゴ」デザイン */
+        .review-card.high-rated {
+            border-left: 10px solid var(--jojo-purple);
+            box-shadow: 0 0 15px rgba(75, 0, 130, 0.4);
+            background: linear-gradient(135deg, #fff 0%, #f9f0ff 100%);
+        }
+        .review-card.high-rated::before {
+            content: "ゴゴゴゴゴ…";
+            position: absolute; bottom: 5px; right: 10px;
+            font-size: 1.5rem; font-weight: bold; color: rgba(0, 0, 0, 0.15); font-style: italic; z-index: 0;
+        }
+
+        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.1rem; }
         .area-tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
-        .review-content { margin-top: 10px; white-space: pre-wrap; }
+        .review-content { margin-top: 10px; white-space: pre-wrap; position: relative; z-index: 1; }
+        
+        /* 道！ボタン */
+        .like-btn {
+            background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue);
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s;
+        }
+        .like-btn:hover { background: var(--hokkaido-blue); color: white; }
+        
         footer { text-align: center; padding: 2rem; color: #999; font-size: 0.8rem; }
     </style>
 </head>
@@ -38,10 +57,8 @@
             <label>エリア</label>
             <select id="postArea">
                 <option value="">選択してください</option>
-                <option value="道央">道央</option>
-                <option value="道南">道南</option>
-                <option value="道北">道北</option>
-                <option value="道東">道東</option>
+                <option value="道央">道央</option><option value="道南">道南</option>
+                <option value="道北">道北</option><option value="道東">道東</option>
             </select>
         </div>
         <div class="form-group">
@@ -54,14 +71,6 @@
         </div>
         <button class="submit-btn" onclick="addReview()">現実を投稿する</button>
     </section>
-
-    <div class="filter-buttons">
-        <button class="filter-btn active" onclick="filterReviews('すべて')">すべて</button>
-        <button class="filter-btn" onclick="filterReviews('道央')">道央</button>
-        <button class="filter-btn" onclick="filterReviews('道南')">道南</button>
-        <button class="filter-btn" onclick="filterReviews('道北')">道北</button>
-        <button class="filter-btn" onclick="filterReviews('道東')">道東</button>
-    </div>
 
     <div id="reviewList"></div>
 </div>
@@ -78,9 +87,20 @@
         list.innerHTML = '';
         reviews.forEach(review => {
             const card = document.createElement('div');
-            card.className = 'review-card';
-            card.dataset.area = review.area;
-            card.innerHTML = `<div class="review-header"><span class="shop-name">${review.shop}</span><span class="area-tag">${review.area}</span></div><p class="review-content">${review.content}</p>`;
+            // 3以上の評価で「ゴゴゴ」クラスを付与
+            const isHighRated = (review.likes || 0) >= 3 ? 'high-rated' : '';
+            card.className = `review-card ${isHighRated}`;
+            
+            card.innerHTML = `
+                <div class="review-header">
+                    <span class="shop-name">${review.shop}</span>
+                    <span class="area-tag">${review.area}</span>
+                </div>
+                <p class="review-content">${review.content}</p>
+                <button class="like-btn" onclick="likeReview(${review.id})">
+                    🏔️ 道！ (${review.likes || 0})
+                </button>
+            `;
             list.appendChild(card);
         });
     }
@@ -90,33 +110,23 @@
         const shop = document.getElementById('postShop').value.trim();
         const content = document.getElementById('postContent').value.trim();
 
-        // 🛡️ しゅうちゃん、ここが「個別エラー」の正体だぜ！
         if (!area) return alert("エリアを選択してくれ！");
         if (!shop) return alert("店名を入力してくれ！");
         if (!content) return alert("内容を入力してくれ！");
 
-        const response = await fetch('/api/reviews', {
+        await fetch('/api/reviews', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ area, shop, content })
         });
-
-        if (response.ok) {
-            alert("投稿完了！");
-            document.getElementById('postArea').value = "";
-            document.getElementById('postShop').value = "";
-            document.getElementById('postContent').value = "";
-            loadReviews();
-        } else {
-            alert("投稿に失敗したぜ。データベースの接続を確認してくれ。");
-        }
+        location.reload();
     }
 
-    function filterReviews(area) {
-        const cards = document.querySelectorAll('.review-card');
-        const buttons = document.querySelectorAll('.filter-btn');
-        buttons.forEach(btn => btn.classList.toggle('active', btn.innerText === area));
-        cards.forEach(card => card.style.display = (area === 'すべて' || card.dataset.area === area) ? 'block' : 'none');
+    async function likeReview(id) {
+        const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
+        if (response.ok) {
+            loadReviews(); // 数値を更新
+        }
     }
 </script>
 </body>
