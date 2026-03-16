@@ -8,7 +8,6 @@
         :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
 
-        /* 🚀 魂のヘッダー：背景画像 ＆ グラデーション */
         header { 
             background-image: linear-gradient(rgba(0, 86, 179, 0.7), rgba(0, 86, 179, 0.8)), 
                               url('header-bg.jpg'); 
@@ -23,7 +22,15 @@
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .post-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        /* ⚠️ 掟（注意喚起）スタイル */
+        /* 🚀 フィルターボタンのデザイン：ジョジョ風オーラを少し意識 */
+        .filter-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 2rem; justify-content: center; }
+        .filter-btn { 
+            background: white; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
+            padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .filter-btn.active { background: var(--hokkaido-blue); color: white; box-shadow: 0 0 10px rgba(0, 86, 179, 0.5); }
+        .filter-btn:hover { transform: translateY(-2px); }
+
         .warning-box { 
             background: #fff5f5; border: 1px solid #feb2b2; padding: 1rem; 
             border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #c53030;
@@ -37,7 +44,6 @@
         
         .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; transition: 0.3s; }
         
-        /* 🔥 高評価「ゴゴゴ」デザイン */
         .review-card.high-rated {
             border-left: 10px solid var(--jojo-purple);
             box-shadow: 0 0 15px rgba(75, 0, 130, 0.4);
@@ -91,23 +97,37 @@
         <button class="submit-btn" onclick="addReview()">現実を投稿する</button>
     </section>
 
+    <div class="filter-container">
+        <button class="filter-btn active" onclick="filterReviews('すべて', this)">すべて</button>
+        <button class="filter-btn" onclick="filterReviews('道央', this)">道央</button>
+        <button class="filter-btn" onclick="filterReviews('道南', this)">道南</button>
+        <button class="filter-btn" onclick="filterReviews('道北', this)">道北</button>
+        <button class="filter-btn" onclick="filterReviews('道東', this)">道東</button>
+    </div>
+
     <div id="reviewList"></div>
 </div>
 
 <footer>&copy; 2026 道バイト・リアル</footer>
 
 <script>
+    let allReviews = []; // 全データを保持する「記憶のライブラリ」だ
+
     window.onload = loadReviews;
 
     // 1. レビュー一覧の読み込み
     async function loadReviews() {
         const response = await fetch('/api/reviews');
-        const reviews = await response.json();
+        allReviews = await response.json();
+        renderReviews(allReviews); // 最初は全部出すぜ
+    }
+
+    // 🚀 表示処理を共通化：こいつが画面を描き変える！
+    function renderReviews(reviews) {
         const list = document.getElementById('reviewList');
         list.innerHTML = '';
         reviews.forEach(review => {
             const card = document.createElement('div');
-            // 3以上の評価で「ゴゴゴ」オーラ
             const isHighRated = (review.likes || 0) >= 3 ? 'high-rated' : '';
             card.className = `review-card ${isHighRated}`;
             
@@ -124,6 +144,21 @@
             `;
             list.appendChild(card);
         });
+    }
+
+    // 🚀 フィルター機能：選んだエリアだけを抽出（セレクト）しろ！
+    function filterReviews(area, btn) {
+        // ボタンの見た目を切り替える
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // データの絞り込み
+        if (area === 'すべて') {
+            renderReviews(allReviews);
+        } else {
+            const filtered = allReviews.filter(r => r.area === area);
+            renderReviews(filtered);
+        }
     }
 
     // 2. 新規投稿
@@ -145,7 +180,15 @@
     // 3. 「道！」ボタン（評価）
     async function likeReview(id) {
         const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
-        if (response.ok) loadReviews();
+        if (response.ok) {
+            // リロードせずにデータを最新にして再描画するぜ
+            const resp = await fetch('/api/reviews');
+            allReviews = await resp.json();
+            // 現在アクティブなフィルターを維持して再表示
+            const activeBtn = document.querySelector('.filter-btn.active');
+            const currentArea = activeBtn.innerText;
+            filterReviews(currentArea, activeBtn);
+        }
     }
 
     // 4. 削除依頼（通報）
