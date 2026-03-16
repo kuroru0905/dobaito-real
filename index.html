@@ -7,17 +7,14 @@
     <style>
         :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
-        header { background-color: var(--hokkaido-blue); color: white; padding: 2rem 1rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        header { background-color: var(--hokkaido-blue); color: white; padding: 2rem 1rem; text-align: center; }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .post-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .submit-btn { background-color: var(--warning-red); color: white; border: none; padding: 1rem; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        
         .review-card { background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 6px solid var(--hokkaido-blue); position: relative; transition: 0.3s; }
         
-        /* 🔥 高評価「ゴゴゴ」デザイン */
         .review-card.high-rated {
             border-left: 10px solid var(--jojo-purple);
             box-shadow: 0 0 15px rgba(75, 0, 130, 0.4);
@@ -30,17 +27,11 @@
         }
 
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.1rem; }
-        .area-tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; }
-        .review-content { margin-top: 10px; white-space: pre-wrap; position: relative; z-index: 1; }
-        
-        /* 道！ボタン */
         .like-btn {
             background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue);
             padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s;
         }
         .like-btn:hover { background: var(--hokkaido-blue); color: white; }
-        
-        footer { text-align: center; padding: 2rem; color: #999; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -52,7 +43,6 @@
 
 <div class="container">
     <section class="post-section">
-        <h2>📢 現場のリアルを投稿する</h2>
         <div class="form-group">
             <label>エリア</label>
             <select id="postArea">
@@ -61,21 +51,12 @@
                 <option value="道北">道北</option><option value="道東">道東</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>店名</label>
-            <input type="text" id="postShop" placeholder="例：〇〇居酒屋 札幌店">
-        </div>
-        <div class="form-group">
-            <label>内容</label>
-            <textarea id="postContent" rows="4" placeholder="冬の除雪の実態など..."></textarea>
-        </div>
+        <div class="form-group"><label>店名</label><input type="text" id="postShop" placeholder="例：〇〇居酒屋 札幌店"></div>
+        <div class="form-group"><label>内容</label><textarea id="postContent" rows="4" placeholder="冬の除雪の実態など..."></textarea></div>
         <button class="submit-btn" onclick="addReview()">現実を投稿する</button>
     </section>
-
     <div id="reviewList"></div>
 </div>
-
-<footer>&copy; 2026 道バイト・リアル</footer>
 
 <script>
     window.onload = loadReviews;
@@ -87,19 +68,16 @@
         list.innerHTML = '';
         reviews.forEach(review => {
             const card = document.createElement('div');
-            // 3以上の評価で「ゴゴゴ」クラスを付与
             const isHighRated = (review.likes || 0) >= 3 ? 'high-rated' : '';
             card.className = `review-card ${isHighRated}`;
             
             card.innerHTML = `
-                <div class="review-header">
-                    <span class="shop-name">${review.shop}</span>
-                    <span class="area-tag">${review.area}</span>
+                <div class="review-header"><span class="shop-name">${review.shop}</span><span style="background:#eee; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-left:10px;">${review.area}</span></div>
+                <p class="review-content" style="margin-top:10px; white-space:pre-wrap;">${review.content}</p>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="like-btn" onclick="likeReview(${review.id})">🏔️ 道！ (${review.likes || 0})</button>
+                    <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer; margin-top:10px;">🚩 削除依頼</button>
                 </div>
-                <p class="review-content">${review.content}</p>
-                <button class="like-btn" onclick="likeReview(${review.id})">
-                    🏔️ 道！ (${review.likes || 0})
-                </button>
             `;
             list.appendChild(card);
         });
@@ -109,11 +87,7 @@
         const area = document.getElementById('postArea').value;
         const shop = document.getElementById('postShop').value.trim();
         const content = document.getElementById('postContent').value.trim();
-
-        if (!area) return alert("エリアを選択してくれ！");
-        if (!shop) return alert("店名を入力してくれ！");
-        if (!content) return alert("内容を入力してくれ！");
-
+        if (!area || !shop || !content) return alert("全部入力してくれ！");
         await fetch('/api/reviews', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -123,10 +97,19 @@
     }
 
     async function likeReview(id) {
-        const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
-        if (response.ok) {
-            loadReviews(); // 数値を更新
-        }
+        await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
+        loadReviews();
+    }
+
+    async function reportReview(id) {
+        const reason = prompt("削除を依頼する理由を入力してくれ（例：虚偽、店名間違いなど）");
+        if (!reason) return;
+        const response = await fetch(`/api/reviews/${id}/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (response.ok) alert("依頼を受け付けたぜ！");
     }
 </script>
 </body>

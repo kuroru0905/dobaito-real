@@ -14,24 +14,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// データベース初期化
-(async () => {
-    try {
-        await pool.query(`CREATE TABLE IF NOT EXISTS reviews (
-            id SERIAL PRIMARY KEY,
-            area TEXT NOT NULL,
-            shop TEXT NOT NULL,
-            content TEXT NOT NULL,
-            likes INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`);
-        console.log("✅ Supabase PostgreSQL 接続成功！");
-    } catch (err) {
-        console.error("❌ 接続エラー:", err);
-    }
-})();
-
-// API: 全レビュー取得
+// 1. 全レビュー取得
 app.get('/api/reviews', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM reviews ORDER BY id DESC');
@@ -41,7 +24,7 @@ app.get('/api/reviews', async (req, res) => {
     }
 });
 
-// API: レビュー投稿
+// 2. レビュー投稿
 app.post('/api/reviews', async (req, res) => {
     const { area, shop, content } = req.body;
     try {
@@ -52,7 +35,7 @@ app.post('/api/reviews', async (req, res) => {
     }
 });
 
-// 🚀 API: 「道！」ボタン（評価カウントアップ）
+// 3. 「道！」ボタン（評価）
 app.post('/api/reviews/:id/like', async (req, res) => {
     const { id } = req.params;
     try {
@@ -62,12 +45,26 @@ app.post('/api/reviews/:id/like', async (req, res) => {
         );
         res.json({ likes: result.rows[0]?.likes || 0 });
     } catch (err) {
-        console.error("評価エラー:", err);
         res.status(500).json({ error: "評価失敗" });
     }
 });
 
-// API: 管理者ログイン
+// 🚀 4. 削除依頼（通報）を受け付ける窓口だ！
+app.post('/api/reviews/:id/report', async (req, res) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+    try {
+        await pool.query(
+            'UPDATE reviews SET is_reported = TRUE, report_reason = $1 WHERE id = $2',
+            [reason, parseInt(id)]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "通報失敗" });
+    }
+});
+
+// 5. 管理者ログイン
 app.post('/api/admin/login', (req, res) => {
     if (req.body.password === 'Shake0905') {
         return res.json({ success: true, token: 'Shake0905' });
@@ -75,7 +72,7 @@ app.post('/api/admin/login', (req, res) => {
     res.status(401).json({ success: false });
 });
 
-// API: レビュー削除
+// 6. レビュー削除
 app.delete('/api/reviews/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -89,4 +86,4 @@ app.delete('/api/reviews/:id', async (req, res) => {
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`🏔️ 道バイト・リアル 稼働中！`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🏔️ 稼働中！`));
