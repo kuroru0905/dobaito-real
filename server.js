@@ -32,8 +32,8 @@ app.post('/api/reviews/:id/like', (req, res) => {
     else { res.status(404).send('見つからねえ！'); }
 });
 
-// 🚀 これが最新ライブラリの壁をブチ破る「正規表現ワイルドカード」だッ！
-app.get('(.*)', (req, res) => {
+// 🚀 これが「名前付きワイルドカード」の決定版だッ！！
+app.get('/:any*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
