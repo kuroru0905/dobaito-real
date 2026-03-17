@@ -28,7 +28,7 @@
     }
     async function renderAdminView() {
         const content = document.getElementById('adminContent');
-        // 🚀 フィルター用のUIを配置
+        // 🚀 UIの土台を1回だけ作成
         content.innerHTML = `
             <div style="margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 8px;">
                 <label style="font-weight: bold; cursor: pointer;">
@@ -39,10 +39,9 @@
             <div id="adminList"></div>
             <br><button onclick="logout()">ログアウト</button>
         `;
-        applyFilter(); // 初回表示
+        applyFilter(); 
     }
 
-    // 🚀 フィルター適用ロジック（精密動作性A）
     async function applyFilter() {
         const list = document.getElementById('adminList');
         const showOnlyReported = document.getElementById('reportFilter').checked;
@@ -51,7 +50,6 @@
         const reviews = await (await fetch('/api/reviews')).json();
         list.innerHTML = "";
 
-        // フィルター条件で絞り込む
         const filteredReviews = showOnlyReported 
             ? reviews.filter(r => r.is_reported) 
             : reviews;
@@ -81,11 +79,12 @@
         });
     }
 
-    async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); renderAdminView(); } }
+    // 🚀 更新後に renderAdminView ではなく applyFilter を呼ぶことでチェック状態を維持ッ！
+    async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
     async function dismissReport(id) {
         if (confirm("この依頼を却下して通報をリセットするぜ？")) {
             await fetch(`/api/reviews/${id}/dismiss`, { method: 'POST' });
-            renderAdminView();
+            applyFilter();
         }
     }
     function logout() { localStorage.removeItem('adminToken'); location.reload(); }
