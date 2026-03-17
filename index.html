@@ -88,7 +88,6 @@
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
 
-        /* 🚀 メメタァ！専用テーマ修正（白文字強制ルール追加） */
         .review-card.ultra-rated[data-jojo="メメタァ！"] { border-left: 15px solid var(--jojo-purple); background: linear-gradient(135deg, #4b0082 0%, #000 100%); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .total-rating-label { color: #fff !important; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .shop-name { color: var(--jojo-gold); }
@@ -227,6 +226,14 @@
 </footer>
 
 <script>
+    // 🚀 エスケープ関数を追加（表示時の防御：精密動作性A）
+    function escapeHTML(str) {
+        if (!str) return "";
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     let currentArea = 'すべて';
     function togglePostForm() {
         const section = document.getElementById('postSection');
@@ -329,6 +336,13 @@
         const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
 
         reviews.forEach((review, index) => {
+            // 🛡️ 表示直前にデータを無害化するッ！
+            const shop = escapeHTML(review.shop);
+            const area = escapeHTML(review.area);
+            const city = escapeHTML(review.city || '不明');
+            const job = escapeHTML(review.job_type || '無指定');
+            const content = escapeHTML(review.content);
+
             const card = document.createElement('div');
             const likes = review.likes || 0;
             
@@ -349,18 +363,16 @@
             card.className = `review-card ${statusClass}`;
             if (jojoText) card.setAttribute('data-jojo', jojoText);
 
-            const jobTypeLabel = review.job_type || '無指定';
-
             card.innerHTML = `
                 <div class="review-header">
-                    <span class="shop-name">${review.shop}</span>
-                    <span class="area-tag">${review.area}</span>
-                    <span class="city-tag">${review.city || '不明'}</span>
-                    <span class="job-tag">${jobTypeLabel}</span>
+                    <span class="shop-name">${shop}</span>
+                    <span class="area-tag">${area}</span>
+                    <span class="city-tag">${city}</span>
+                    <span class="job-tag">${job}</span>
                 </div>
                 <div class="total-rating-label" style="margin: 8px 0; font-weight: bold; color: #444;">総合評価: ${getStarsHtml(review.rating || 3)}</div>
                 <div class="review-date" style="font-size: 0.8rem; color: #999;">🗓️ 投稿日: ${dateStr}</div>
-                <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${review.content}</p>
+                <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${content}</p>
                 <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                     <button id="like-${review.id}" class="like-btn ${votedClass}" onclick="likeReview(${review.id})">良道！ (${likes})</button>
                     <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer;">🚩 削除依頼</button>
