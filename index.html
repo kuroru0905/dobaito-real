@@ -158,7 +158,7 @@
             <select id="postArea" onchange="updateCities()">
                 <option value="">選択してください</option>
                 <option value="道央">道央（札幌・石狩・空知・後志）</option>
-                <option value="道南">道南（函館・登別・室蘭・苫小牧・日高）</option>
+                <option value="道南">道南（函館・登別・室蘭・苫高牧・日高）</option>
                 <option value="道北">道北（旭川・留萌・宗谷）</option>
                 <option value="道東">道東（帯広・釧路・根室・オホーツク）</option>
             </select>
@@ -362,9 +362,9 @@
             else if (likes >= 30) { statusClass = 'ultra-rated'; jojoText = 'バァァァン！'; }
             else if (likes >= 10) { statusClass = 'high-rated'; jojoText = 'ゴゴゴゴゴ…'; }
 
-            // 🚀 投稿の年月日・時間を精密に表示だッ！
-            const dateStr = review.created_at ? new Date(review.created_at).toLocaleString('ja-JP', {
-                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+            // 🚀 閲覧画面は「年月日」のみを表示するぜッ！
+            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', {
+                year: 'numeric', month: '2-digit', day: '2-digit'
             }) : '日付不明';
 
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
@@ -431,10 +431,10 @@
         try {
             const res = await fetch(`/api/reviews/${id}/comments`);
             const comments = await res.json();
-            // 🚀 返信ごとの年月日・時間を精密に表示し、通報ボタンも設置ッ！
+            // 🚀 返信も「年月日」のみを表示し、通報ボタンを精密に配置ッ！
             list.innerHTML = comments.map(c => {
-                const date = new Date(c.created_at).toLocaleString('ja-JP', {
-                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                const date = new Date(c.created_at).toLocaleDateString('ja-JP', {
+                    year: 'numeric', month: '2-digit', day: '2-digit'
                 });
                 return `
                     <div class="comment-item">
@@ -450,7 +450,7 @@
         } catch (e) { alert("返信の読み込みに失敗"); }
     }
 
-    // 🚀 返信通報機能だッ！理由も書かせるぜ
+    // 🚀 返信通報機能だッ！
     async function reportComment(id) {
         const reason = prompt("この返信を通報する理由を入力しろッ！");
         if (!reason) return;

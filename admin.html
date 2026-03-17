@@ -17,6 +17,9 @@
         .stat-val { font-size: 2.5rem; font-weight: 900; margin: 10px 0; }
         h2 { border-left: 8px solid var(--jojo-purple); padding-left: 15px; margin-top: 40px; color: var(--jojo-purple); }
         .tag-date { font-size: 0.8rem; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; }
+        /* 🚀 投稿内返信リスト用のスタイル */
+        .inner-comment-list { margin-top: 15px; padding-left: 20px; border-left: 3px solid #ddd; }
+        .inner-comment-item { background: #f9f9f9; padding: 8px; border-radius: 6px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -92,7 +95,6 @@
         loadReportedComments(); 
     }
 
-    // 🚀 返信管理の描画処理：年月日・時間を精密に表示するぜッ！
     async function loadReportedComments() {
         const list = document.getElementById('adminCommentList');
         try {
@@ -108,10 +110,7 @@
             comments.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'review-item';
-                // 🚀 返信の日時を「年月日 時間」で表示
-                const date = new Date(c.created_at).toLocaleString('ja-JP', {
-                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
+                const date = new Date(c.created_at).toLocaleString('ja-JP');
                 item.innerHTML = `
                     <div class="item-main">
                         <div style="flex-grow:1;">
@@ -146,36 +145,60 @@
             list.innerHTML = "";
             const filteredReviews = showOnlyReported ? reviews.filter(r => r.is_reported) : reviews;
 
-            filteredReviews.forEach(review => {
+            for (const review of filteredReviews) {
                 const item = document.createElement('div');
                 item.className = 'review-item';
-                // 🚀 投稿の日時も返信と同じ「年月日 時間」のフォーマットに統一ッ！
-                const date = new Date(review.created_at).toLocaleString('ja-JP', {
-                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
+                const date = new Date(review.created_at).toLocaleString('ja-JP');
+                
+                // 🚀 その投稿に紐づく返信をすべて取得して表示するッ！
+                const cRes = await fetch(`/api/reviews/${review.id}/comments`);
+                const comments = await cRes.json();
+                let innerCommentsHtml = "";
+                if (comments.length > 0) {
+                    innerCommentsHtml = `
+                        <div class="inner-comment-list">
+                            <small style="color:#888;">💬 この投稿への返信:</small>
+                            ${comments.map(c => `
+                                <div class="inner-comment-item">
+                                    <span>${c.content} <small class="tag-date">${new Date(c.created_at).toLocaleString()}</small></span>
+                                    <button class="delete-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="deleteComment(${c.id})">返信削除</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
                 const reportAlert = review.is_reported ? `
                     <div class="report-badge">⚠️ 理由: ${review.report_reason} <button class="dismiss-btn" onclick="dismissReport(${review.id})">却下</button></div>` : '';
+                
                 item.innerHTML = `
                     <div class="item-main">
                         <div style="flex-grow:1;">
                             <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">🗓️ ${date}</small></div>
                             <div style="font-size:0.9rem; color:#666; margin-top:5px;">${review.content}</div>
+                            ${innerCommentsHtml}
                             ${reportAlert}
                         </div>
-                        <button class="delete-btn" onclick="deleteReview(${review.id})">削除</button>
+                        <button class="delete-btn" onclick="deleteReview(${review.id})">投稿削除</button>
                     </div>
                 `;
                 list.appendChild(item);
-            });
+            }
         } catch (err) { list.innerHTML = "読み込み失敗だぜッ！"; }
     }
 
-    async function deleteReview(id) { if (confirm("この投稿を消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
+    async function deleteReview(id) { if (confirm("この投稿（および紐づく返信）をすべて消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
     async function dismissReport(id) {
         if (confirm("依頼を却下するぜ？")) { await fetch(`/api/reviews/${id}/dismiss`, { method: 'POST' }); applyFilter(); }
     }
     
-    async function deleteComment(id) { if (confirm("この返信を消し飛ばすか？")) { await fetch(`/api/comments/${id}`, { method: 'DELETE' }); loadReportedComments(); } }
+    async function deleteComment(id) { 
+        if (confirm("この返信だけを消し飛ばすか？")) { 
+            await fetch(`/api/comments/${id}`, { method: 'DELETE' }); 
+            applyFilter(); 
+            loadReportedComments(); 
+        } 
+    }
     async function dismissComment(id) { if (confirm("通報を却下するぜ？")) { await fetch(`/api/comments/${id}/dismiss`, { method: 'POST' }); loadReportedComments(); } }
 
     function logout() { localStorage.removeItem('adminToken'); location.reload(); }
