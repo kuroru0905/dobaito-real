@@ -3,7 +3,8 @@ const app = express();
 const path = require('path');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// 🚀 今のフォルダ構成に合わせて、ルートディレクトリを静的配信に設定！
+app.use(express.static(__dirname));
 
 let reviews = [];
 
@@ -37,7 +38,7 @@ app.post('/api/reviews/:id/like', (req, res) => {
     else res.status(404).send('なし');
 });
 
-// 📡 削除依頼（レポート）
+// 📡 削除依頼
 app.post('/api/reviews/:id/report', (req, res) => {
     const review = reviews.find(r => r.id === parseInt(req.params.id));
     if (review) {
@@ -69,12 +70,10 @@ app.post('/api/reviews/:id/dismiss', (req, res) => {
     } else res.status(404).send('なし');
 });
 
-// 🏠 SPA対応（API以外の全てのアクセスをindex.htmlへ）
-// APIルートより下に書くのが鉄則だッ！
+// 🏠 SPA対応（ファイルをルートから探す！）
 app.use((req, res, next) => {
-    // もし既存のファイル（admin.htmlなど）があればそれを優先
     if (path.extname(req.path).length > 0) return next();
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
