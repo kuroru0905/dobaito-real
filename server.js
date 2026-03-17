@@ -33,12 +33,14 @@ app.get('/api/reviews', async (req, res) => {
 
 /**
  * 📡 POST /api/reviews
+ * 🚀 job_type（職種）を確実にSupabaseへ刻み込むぜッ！
  */
 app.post('/api/reviews', async (req, res) => {
-    const { area, city, shop, content } = req.body;
+    // フロントから届いた job_type をしっかり受け取るッ！
+    const { area, city, shop, content, job_type } = req.body;
     
-    if (!area || !city || !shop || !content) {
-        return res.status(400).send('データが足りねえぜッ！');
+    if (!area || !city || !shop || !content || !job_type) {
+        return res.status(400).send('データが足りねえぜッ！職種も選んでくれ！');
     }
 
     try {
@@ -49,6 +51,7 @@ app.post('/api/reviews', async (req, res) => {
                 city: city, 
                 shop: shop, 
                 content: content, 
+                job_type: job_type, // 🚀 ここが真実への鍵だッ！
                 likes: 0,
                 is_reported: false,
                 report_reason: ''
