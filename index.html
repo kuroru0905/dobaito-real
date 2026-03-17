@@ -59,7 +59,6 @@
         .submit-btn:hover { background-color: #e60000; transform: translateY(-2px); }
         .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
 
-        /* 🚀 検索・ソート用スタイル追加 */
         .controls-panel { background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .search-flex { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
         .search-flex > * { flex: 1; min-width: 150px; }
@@ -77,7 +76,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
 
-        /* 🚀 星評価スタイル追加 */
         .star-active { color: #f1c40f; }
         .star-off { color: #ddd; }
         
@@ -272,7 +270,7 @@
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 高度なフィルター・ソートロジック
+    // 🚀 キーワード検索ロジック：3文字以上一致判定（精密動作性）
     function runAdvancedFilter() {
         const keyword = document.getElementById('keywordSearch').value.toLowerCase();
         const job = document.getElementById('filterJobType').value;
@@ -281,7 +279,24 @@
         let filtered = allReviews.filter(r => {
             const matchArea = (currentArea === 'すべて' || r.area === currentArea);
             const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
-            const matchKeyword = (r.shop.toLowerCase().includes(keyword) || r.content.toLowerCase().includes(keyword));
+            
+            // 🎯 3文字以上一致ロジック
+            let matchKeyword = true;
+            if (keyword.length > 0) {
+                const shopText = (r.shop || "").toLowerCase();
+                const contentText = (r.content || "").toLowerCase();
+                const combinedText = shopText + contentText;
+                
+                let hitCount = 0;
+                // キーワードの各文字が対象文字列に何回含まれているかカウント
+                for (let char of keyword) {
+                    if (combinedText.includes(char)) hitCount++;
+                }
+                // 3文字以上ヒット、またはキーワード自体が短い場合は全文字一致を条件にする
+                const threshold = Math.min(3, keyword.length);
+                matchKeyword = (hitCount >= threshold);
+            }
+            
             return matchArea && matchJob && matchKeyword;
         });
 
