@@ -28,10 +28,40 @@
     }
     async function renderAdminView() {
         const content = document.getElementById('adminContent');
-        content.innerHTML = `<h3>投稿管理リスト</h3><div id="adminList"></div><br><button onclick="logout()">ログアウト</button>`;
-        const reviews = await (await fetch('/api/reviews')).json();
+        // 🚀 フィルター用のUIを配置
+        content.innerHTML = `
+            <div style="margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 8px;">
+                <label style="font-weight: bold; cursor: pointer;">
+                    <input type="checkbox" id="reportFilter" onchange="applyFilter()"> 🚩 削除依頼があった投稿のみ表示
+                </label>
+            </div>
+            <h3>投稿管理リスト</h3>
+            <div id="adminList"></div>
+            <br><button onclick="logout()">ログアウト</button>
+        `;
+        applyFilter(); // 初回表示
+    }
+
+    // 🚀 フィルター適用ロジック（精密動作性A）
+    async function applyFilter() {
         const list = document.getElementById('adminList');
-        reviews.forEach(review => {
+        const showOnlyReported = document.getElementById('reportFilter').checked;
+        list.innerHTML = "読み込み中...";
+        
+        const reviews = await (await fetch('/api/reviews')).json();
+        list.innerHTML = "";
+
+        // フィルター条件で絞り込む
+        const filteredReviews = showOnlyReported 
+            ? reviews.filter(r => r.is_reported) 
+            : reviews;
+
+        if (filteredReviews.length === 0) {
+            list.innerHTML = "<p style='color:#999; padding:20px;'>対象の投稿はねえぜッ！</p>";
+            return;
+        }
+
+        filteredReviews.forEach(review => {
             const item = document.createElement('div');
             item.className = 'review-item';
             const reportAlert = review.is_reported ? `
@@ -41,7 +71,7 @@
                 </div>` : '';
             item.innerHTML = `
                 <div style="flex-grow:1;">
-                    <div><b>${review.shop}</b> [${review.area}] <small>${review.date}</small></div>
+                    <div><b>${review.shop}</b> [${review.area}] <small>${review.created_at || review.date}</small></div>
                     <div style="font-size:0.9rem; color:#666;">${review.content}</div>
                     ${reportAlert}
                 </div>
@@ -50,6 +80,7 @@
             list.appendChild(item);
         });
     }
+
     async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); renderAdminView(); } }
     async function dismissReport(id) {
         if (confirm("この依頼を却下して通報をリセットするぜ？")) {
