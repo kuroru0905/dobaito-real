@@ -390,6 +390,7 @@
     }
 
     async function addReview() {
+        const submitBtn = document.querySelector('.submit-btn'); // 🛡️ ボタンを取得
         const data = {
             area: document.getElementById('postArea').value,
             city: document.getElementById('postCity').value,
@@ -403,17 +404,34 @@
         if (!confirm("この内容で現場のリアルを刻み込むか？")) return;
 
         try {
+            // 🛡️ 投稿開始時にボタンを「再起不能」にする
+            submitBtn.disabled = true;
+            submitBtn.innerText = "刻み込み中...";
+
             const response = await fetch('/api/reviews', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify(data)
             });
+
             if (response.ok) {
                 alert("投稿完了ッ！");
-                document.getElementById('postShop').value = ''; document.getElementById('postContent').value = '';
-                togglePostForm(); await loadReviews();
+                document.getElementById('postShop').value = ''; 
+                document.getElementById('postContent').value = '';
+                togglePostForm(); 
+                await loadReviews();
+            } else {
+                // 🛡️ 連投制限（429）などのエラーを叫ぶッ！
+                const errorMsg = await response.text();
+                alert(errorMsg || "投稿に失敗したぜッ！");
             }
-        } catch (error) { alert("通信エラーだ！"); }
+        } catch (error) { 
+            alert("通信エラーだ！"); 
+        } finally {
+            // 🛡️ 完了したらボタンを復旧させる（成功時はリロードされるので主に失敗時用）
+            submitBtn.disabled = false;
+            submitBtn.innerText = "この現実を投稿する";
+        }
     }
 
     async function likeReview(id) {
