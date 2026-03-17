@@ -32,8 +32,8 @@ app.post('/api/reviews/:id/like', (req, res) => {
     else { res.status(404).send('見つからねえ！'); }
 });
 
-// 🚀 これが「名前付きワイルドカード」の決定版だッ！！
-app.get('/:any*', (req, res) => {
+// 🚀 「 app.get 」を使わないことで、エラーを物理的に回避するッ！！
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
