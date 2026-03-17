@@ -62,7 +62,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🚀 ジョジョ・ランク表示 */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(0, 0, 0, 0.1); font-style: italic; }
         .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
@@ -75,16 +74,11 @@
         .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; }
         .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; }
         
-        /* 🚀 良道！ボタンの「覚悟」スタイル */
         .like-btn { 
             background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
             padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
         }
-        /* 🔴 押した後の赤色スタイル */
-        .like-btn.voted { 
-            background-color: var(--warning-red); border-color: var(--warning-red); color: white; 
-            animation: punch 0.3s ease;
-        }
+        .like-btn.voted { background-color: var(--warning-red); border-color: var(--warning-red); color: white; animation: punch 0.3s ease; }
         @keyframes punch { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
@@ -112,7 +106,7 @@
             <select id="postArea" onchange="updateCities()">
                 <option value="">選択してください</option>
                 <option value="道央">道央（札幌・石狩・空知・後志）</option>
-                <option value="道南">道南（函館・登別・室蘭・苫小牧・日高）</option>
+                <option value="道南">道南（函館・登別・室蘭・苫お牧・日高）</option>
                 <option value="道北">道北（旭川・留萌・宗谷）</option>
                 <option value="道東">道東（帯広・釧路・根室・オホーツク）</option>
             </select>
@@ -196,7 +190,6 @@
         if (!list) return;
         list.innerHTML = '';
         
-        // 🚀 localStorageから「いいね済みリスト」を取得
         const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
 
         reviews.forEach((review, index) => {
@@ -208,7 +201,6 @@
                 year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
             }) : '日付不明';
 
-            // 🚀 すでにいいねしてれば 'voted' クラスを付与
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
 
             card.className = `review-card ${statusClass}`;
@@ -285,44 +277,42 @@
         }
     }
 
-    // 🚀 良道！ボタンの処理
     async function likeReview(id) {
         const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
-        
-        // すでに押してたら「”無駄無駄”」だッ！
-        if (votedIds.includes(id)) {
-            alert("すでに良道！を叩き込んでいるぜッ！");
-            return;
-        }
+        if (votedIds.includes(id)) return alert("すでに良道！を叩き込んでいるぜッ！");
 
         try {
             const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
             if (response.ok) {
-                // localStorageにIDを保存
                 votedIds.push(id);
                 localStorage.setItem('votedIds', JSON.stringify(votedIds));
-                
-                // ボタンの見た目を即座に変える
-                const btn = document.getElementById(`like-${id}`);
-                btn.classList.add('voted');
-                
-                // 再読み込み
                 await loadReviews();
             }
-        } catch (error) {
-            console.error(error);
-        }
+        } catch (error) { console.error(error); }
     }
 
+    // 🚩 削除依頼：サーバーへ「真実」を届けるッ！
     async function reportReview(id) {
-        const reason = prompt("理由を入力");
+        const reason = prompt("削除を依頼する理由を入力してくれ（例：個人情報の掲載、誹謗中傷など）");
         if (!reason) return;
-        await fetch(`/api/reviews/${id}/report`, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ reason }) 
-        });
-        alert("管理者に報告したぜ。");
+
+        try {
+            const response = await fetch(`/api/reviews/${id}/report`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ reason }) 
+            });
+
+            if (response.ok) {
+                alert("管理者に報告を送信したぜ。確認を待ってくれッ！");
+                console.log(`✅ 通報完了: ID ${id}, 理由: ${reason}`);
+            } else {
+                alert("報告の送信に失敗したぜッ！サーバー側をチェックしてくれ。");
+            }
+        } catch (error) {
+            console.error("🔥 通報エラー:", error);
+            alert("通信エラーだぜッ！");
+        }
     }
 
     document.addEventListener('DOMContentLoaded', loadReviews);

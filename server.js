@@ -13,7 +13,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
  * 📡 GET /api/reviews
- * 全ての投稿を取得するぜッ！
  */
 app.get('/api/reviews', async (req, res) => {
     try {
@@ -34,7 +33,6 @@ app.get('/api/reviews', async (req, res) => {
 
 /**
  * 📡 POST /api/reviews
- * お前のスキーマ（area, city, shop, content, likes, is_reported）に完全対応！
  */
 app.post('/api/reviews', async (req, res) => {
     const { area, city, shop, content } = req.body;
@@ -70,7 +68,6 @@ app.post('/api/reviews', async (req, res) => {
 
 /**
  * 📡 POST /api/reviews/:id/like
- * 「いいね」をインクリメントするッ！
  */
 app.post('/api/reviews/:id/like', async (req, res) => {
     const id = req.params.id;
@@ -91,6 +88,36 @@ app.post('/api/reviews/:id/like', async (req, res) => {
     }
 });
 
+/**
+ * 🚩 POST /api/reviews/:id/report
+ * 削除依頼（通報）をSupabaseに刻むぜッ！
+ */
+app.post('/api/reviews/:id/report', async (req, res) => {
+    const id = req.params.id;
+    const { reason } = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('reviews')
+            .update({ 
+                is_reported: true, 
+                report_reason: reason 
+            })
+            .eq('id', id)
+            .select();
+
+        if (error) {
+            console.error("❌ 通報処理失敗:", error);
+            return res.status(500).json(error);
+        }
+
+        console.log(`✅ 通報受理: ID ${id}`);
+        res.json(data[0]);
+    } catch (err) {
+        res.status(500).send("通報エラーだぜッ！");
+    }
+});
+
 // 🔑 管理者用：ログイン
 app.post('/api/admin/login', (req, res) => {
     if (req.body.password === 'Shake0905') res.sendStatus(200);
@@ -101,6 +128,19 @@ app.post('/api/admin/login', (req, res) => {
 app.delete('/api/reviews/:id', async (req, res) => {
     await supabase.from('reviews').delete().eq('id', req.params.id);
     res.sendStatus(200);
+});
+
+// ✅ 管理者用：通報の却下（is_reportedを元に戻す）
+app.post('/api/reviews/:id/dismiss', async (req, res) => {
+    try {
+        await supabase
+            .from('reviews')
+            .update({ is_reported: false, report_reason: '' })
+            .eq('id', req.params.id);
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send("却下失敗");
+    }
 });
 
 // 🏠 SPA対応
