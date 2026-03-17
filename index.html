@@ -27,7 +27,19 @@
 
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         
-        .post-section { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* 🚀 投稿セクションの初期状態を隠す */
+        .post-section { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        .post-section.active { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🚀 投稿開始ボタン */
+        .toggle-post-btn { 
+            background-color: var(--hokkaido-blue); color: white; border: none; padding: 1rem 2rem; 
+            border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; 
+            display: block; margin: 0 auto 2rem; box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3); transition: 0.3s;
+        }
+        .toggle-post-btn:hover { transform: scale(1.05); background-color: #004494; }
+
         .post-section h2 { margin-top: 0; margin-bottom: 1.5rem; color: var(--hokkaido-blue); }
         
         .warning-box { 
@@ -62,20 +74,16 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🚀 ランク・擬音テーマ設定（干渉回避修正ッ！） */
-        /* ゴゴゴ (10以上) */
+        /* 🚀 ランク・擬音テーマ設定 */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; }
 
-        /* バァァァン！(30以上) / ズキュウウゥン！(50以上) / メメタァ！(100以上) */
         .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
         .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); z-index: 1; }
 
-        /* ズキュウウゥン！専用テーマ (ピンク) */
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
 
-        /* メメタァ！専用テーマ (漆黒) */
         .review-card.ultra-rated[data-jojo="メメタァ！"] { border-left: 15px solid var(--jojo-purple); background: linear-gradient(135deg, #4b0082 0%, #000 100%); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .shop-name { color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .review-date { color: #ccc; }
@@ -84,25 +92,10 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
 
-        /* 📱 スマホ専用・干渉回避設定（精密動作性A） */
         @media screen and (max-width: 768px) {
-            .review-card.ultra-rated::after {
-                font-size: 1.4rem; /* 小さくするッ！ */
-                top: 5px;          /* さらに上へッ！ */
-                right: 5px;        /* さらに右へッ！ */
-                transform: rotate(15deg); /* 角度をつけて逃げるッ！ */
-            }
-            /* ズキュウウゥン！も同様に逃がす */
-            .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after {
-                font-size: 1.5rem;
-                top: 2px;
-                right: 2px;
-                transform: rotate(-10deg);
-            }
-            /* メメタァ！は真ん中なので干渉しにくいが、少し小さく */
-            .review-card.ultra-rated[data-jojo="メメタァ！"]::after {
-                font-size: 1.8rem;
-            }
+            .review-card.ultra-rated::after { font-size: 1.4rem; top: 5px; right: 5px; transform: rotate(15deg); }
+            .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { font-size: 1.5rem; top: 2px; right: 2px; transform: rotate(-10deg); }
+            .review-card.ultra-rated[data-jojo="メメタァ！"]::after { font-size: 1.8rem; }
         }
 
         .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
@@ -132,7 +125,9 @@
 </header>
 
 <div class="container">
-    <section class="post-section">
+    <button class="toggle-post-btn" id="togglePostBtn" onclick="togglePostForm()">📢 現場のリアルを投稿する</button>
+
+    <section class="post-section" id="postSection">
         <h2>📢 現場のリアルを投稿する</h2>
         <div class="warning-box">
             <strong>【投稿の掟：礼儀を忘れるな】</strong>
@@ -144,7 +139,7 @@
             <select id="postArea" onchange="updateCities()">
                 <option value="">選択してください</option>
                 <option value="道央">道央（札幌・石狩・空知・後志）</option>
-                <option value="道南">道南（函館・登別・室蘭・苫お牧・日高）</option>
+                <option value="道南">道南（函館・登別・室蘭・苫小牧・日高）</option>
                 <option value="道北">道北（旭川・留萌・宗谷）</option>
                 <option value="道東">道東（帯広・釧路・根室・オホーツク）</option>
             </select>
@@ -188,6 +183,20 @@
 </footer>
 
 <script>
+    // 🚀 フォームの表示切り替え関数
+    function togglePostForm() {
+        const section = document.getElementById('postSection');
+        const btn = document.getElementById('togglePostBtn');
+        section.classList.toggle('active');
+        if (section.classList.contains('active')) {
+            btn.innerText = "✖ 閉じる";
+            btn.style.backgroundColor = "#666";
+        } else {
+            btn.innerText = "📢 現場のリアルを投稿する";
+            btn.style.backgroundColor = "var(--hokkaido-blue)";
+        }
+    }
+
     const cityData = {
         "道央": ["札幌市中央区", "札幌市北区", "札幌市東区", "札幌市白石区", "札幌市厚別区", "札幌市豊平区", "札幌市清田区", "札幌市南区", "札幌市西区", "札幌市手稲区", "江別市", "千歳市", "恵庭市", "北広島市", "石狩市", "当別町", "新篠津村", "夕張市", "岩見沢市", "美唄市", "芦別市", "赤平市", "三笠市", "滝川市", "砂川市", "歌志内市", "深川市", "南幌町", "奈井江町", "上砂川町", "由仁町", "長沼町", "栗山町", "月形町", "浦臼町", "新十津川町", "妹背牛町", "秩父別町", "雨竜町", "北竜町", "沼田町", "小樽市", "島牧村", "寿都町", "黒松内町", "蘭越町", "ニセコ町", "真狩村", "留寿都村", "喜茂別町", "京極町", "倶知安町", "共和町", "岩内町", "泊村", "神恵内村", "積丹町", "古平町", "仁木町", "余市町", "赤井川村"],
         "道南": ["函館市", "北斗市", "松前町", "福島町", "知内町", "木古内町", "七飯町", "鹿部町", "森町", "八雲町", "長万部町", "江差町", "上ノ国町", "厚沢部町", "乙部町", "奥尻町", "今金町", "せたな町", "室蘭市", "苫小牧市", "登別市", "伊達市", "豊浦町", "洞爺湖町", "壮瞥町", "白老町", "厚真町", "安平町", "むかわ町", "日高町", "平取町", "新冠町", "浦河町", "様似町", "えりも町", "新ひだか町"],
@@ -234,7 +243,6 @@
             const card = document.createElement('div');
             const likes = review.likes || 0;
             
-            // 🚀 Jemi-niisan専用・精密ランク判定ロジック
             let statusClass = '';
             let jojoText = '';
 
@@ -254,8 +262,9 @@
                 statusClass = '';
             }
 
-            const dateStr = review.created_at ? new Date(review.created_at).toLocaleString('ja-JP', {
-                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+            // 🚀 日付表示を「年月日」のみに変更
+            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', {
+                year: 'numeric', month: '2-digit', day: '2-digit'
             }) : '日付不明';
 
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
@@ -326,6 +335,8 @@
                 alert("投稿完了ッ！お前の「リアル」は刻まれたぜ。");
                 shopEl.value = '';
                 contentEl.value = '';
+                // 🚀 投稿完了後にフォームを閉じる
+                togglePostForm();
                 await loadReviews();
             } else {
                 alert("投稿に失敗ッ！");
