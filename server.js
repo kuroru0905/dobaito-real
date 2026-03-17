@@ -90,7 +90,6 @@ app.post('/api/reviews/:id/like', async (req, res) => {
 
 /**
  * 🚩 POST /api/reviews/:id/report
- * 削除依頼（通報）をSupabaseに刻むぜッ！
  */
 app.post('/api/reviews/:id/report', async (req, res) => {
     const id = req.params.id;
@@ -130,7 +129,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
     res.sendStatus(200);
 });
 
-// ✅ 管理者用：通報の却下（is_reportedを元に戻す）
+// ✅ 管理者用：通報の却下
 app.post('/api/reviews/:id/dismiss', async (req, res) => {
     try {
         await supabase
@@ -149,5 +148,11 @@ app.use((req, res, next) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🏔️ 起動ッ！ Supabase完全同期モード Port: ${PORT}`));
+// --- ここからが Render 対策の「真実」だッ！ ---
+
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🏔️ 起動ッ！ Supabase完全同期モード Port: ${PORT}`);
+    console.log("Renderからの外部接続を 0.0.0.0 で完全待機中だぜッ！！");
+});
