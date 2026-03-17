@@ -52,20 +52,20 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🔥 10以上：ゴゴゴ（high-rated） - バランス調整版 */
+        /* 🔥 10以上：ゴゴゴ（high-rated） - スマホ最適化 */
         .review-card.high-rated { 
             border-left: 12px solid var(--jojo-purple); 
             box-shadow: 0 0 25px rgba(75, 0, 130, 0.5); 
             background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); 
         }
         .review-card.high-rated::before { 
-            content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 15px; 
-            font-size: 1.8rem; /* バァンと合わせた絶妙なサイズ */
+            content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 10px; 
+            font-size: 1.8rem; /* 少し小さく調整 */
             font-weight: 900; color: rgba(0, 0, 0, 0.15); 
             font-style: italic; z-index: 0; text-shadow: 2px 2px 0 var(--jojo-purple);
         }
 
-        /* ⚡️ 30以上：バァン！（ultra-rated） */
+        /* ⚡️ 30以上：バァン！（ultra-rated） - スマホ最適化 */
         .review-card.ultra-rated { 
             border-left: 15px solid #000; 
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); 
@@ -74,19 +74,20 @@
         }
         .review-card.ultra-rated::after { 
             content: "バァァァン！"; 
-            position: absolute; top: 5px; right: 10px; 
-            font-size: 1.8rem; font-weight: 900; 
-            color: #000; text-shadow: 2px 2px 0 var(--jojo-gold); 
-            font-style: italic; transform: rotate(5deg); z-index: 2; opacity: 0.8;
+            position: absolute; top: 10px; right: 10px; /* 枠内に収める */
+            font-size: 1.8rem; /* サイズ調整 */
+            font-weight: 900; color: #000; text-shadow: 3px 3px 0 var(--jojo-gold); 
+            font-style: italic; transform: rotate(10deg); z-index: 2; opacity: 0.8;
         }
 
-        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
-        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; }
-        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; }
-        .review-date { font-size: 0.8rem; color: #999; margin-top: 8px; }
+        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; z-index: 1; position: relative; }
+        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; z-index: 1; position: relative; }
+        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; z-index: 1; position: relative; }
+        .review-date { font-size: 0.8rem; color: #999; margin-top: 8px; z-index: 1; position: relative; }
         .review-content { margin-top: 15px; line-height: 1.7; white-space: pre-wrap; position: relative; z-index: 1; }
         
-        .like-btn { background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .btn-group { display: flex; gap: 10px; align-items: center; margin-top: 15px; position: relative; z-index: 1; }
+        .like-btn { background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; }
     </style>
@@ -111,10 +112,10 @@
             <label>エリア</label>
             <select id="postArea" onchange="updateCities()">
                 <option value="">選択してください</option>
-                <option value="道央">道央地方（札幌・石狩・空知・後志）</option>
-                <option value="道南">道南地方（函館・登別・室蘭・苫小牧・日高）</option>
-                <option value="道北">道北地方（旭川・留萌・宗谷）</option>
-                <option value="道東">道東地方（帯広・釧路・根室・オホーツク）</option>
+                <option value="道央">道央（札幌・石狩・空知・後志）</option>
+                <option value="道南">道南（函館・登別・室蘭・苫小牧・日高）</option>
+                <option value="道北">道北（旭川・留萌・宗谷）</option>
+                <option value="道東">道東（帯広・釧路・根室・オホーツク）</option>
             </select>
         </div>
 
@@ -138,10 +139,10 @@
 
     <div class="filter-container">
         <button class="filter-btn active" onclick="filterReviews('すべて', this)">すべて</button>
-        <button class="filter-btn" onclick="filterReviews('道央', this)">道央地方</button>
-        <button class="filter-btn" onclick="filterReviews('道南', this)">道南地方</button>
-        <button class="filter-btn" onclick="filterReviews('道北', this)">道北地方</button>
-        <button class="filter-btn" onclick="filterReviews('道東', this)">道東地方</button>
+        <button class="filter-btn" onclick="filterReviews('道央', this)">道央</button>
+        <button class="filter-btn" onclick="filterReviews('道南', this)">道南</button>
+        <button class="filter-btn" onclick="filterReviews('道北', this)">道北</button>
+        <button class="filter-btn" onclick="filterReviews('道東', this)">道東</button>
     </div>
 
     <div id="reviewList"></div>
@@ -193,14 +194,14 @@
             card.innerHTML = `
                 <div class="review-header">
                     <span class="shop-name">${review.shop}</span>
-                    <span class="area-tag">${review.area}地方</span>
+                    <span class="area-tag">${review.area}</span>
                     <span class="city-tag">${review.city || '不明'}</span>
                 </div>
                 <div class="review-date">🗓️ 投稿日: ${review.date}</div>
                 <p class="review-content">${review.content}</p>
-                <div style="margin-top:15px; display: flex; gap: 10px; align-items: center;">
+                <div class="btn-group">
                     <button class="like-btn" onclick="likeReview(${review.id})">🏔️ 道！ (${likes})</button>
-                    <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer; margin-top:15px;">🚩 削除依頼</button>
+                    <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer;">🚩 削除依頼</button>
                 </div>
             `;
             list.appendChild(card);
