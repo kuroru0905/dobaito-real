@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static('.'));
 
-// 🚀 IPv4対応・Pooler経由の接続文字列
 const connectionString = "postgresql://postgres.sktxupbkynhlddgjxsvr:Shake0905-db@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres";
 
 const pool = new Pool({
@@ -14,10 +13,10 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// 1. 全レビュー取得
+// 1. 全レビュー取得（作成日時も取得するぜ）
 app.get('/api/reviews', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM reviews ORDER BY id DESC');
+        const result = await pool.query('SELECT *, TO_CHAR(created_at, \'YYYY/MM/DD HH24:MI\') as date FROM reviews ORDER BY id DESC');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: "取得失敗" });
@@ -49,7 +48,7 @@ app.post('/api/reviews/:id/like', async (req, res) => {
     }
 });
 
-// 🚀 4. 削除依頼（通報）を受け付ける窓口だ！
+// 4. 削除依頼（通報）
 app.post('/api/reviews/:id/report', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
@@ -64,7 +63,21 @@ app.post('/api/reviews/:id/report', async (req, res) => {
     }
 });
 
-// 5. 管理者ログイン
+// 🚀 5. 削除依頼を却下（通報リセット）
+app.post('/api/reviews/:id/dismiss', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query(
+            'UPDATE reviews SET is_reported = FALSE, report_reason = NULL WHERE id = $1',
+            [parseInt(id)]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "却下失敗" });
+    }
+});
+
+// 6. 管理者ログイン
 app.post('/api/admin/login', (req, res) => {
     if (req.body.password === 'Shake0905') {
         return res.json({ success: true, token: 'Shake0905' });
@@ -72,7 +85,7 @@ app.post('/api/admin/login', (req, res) => {
     res.status(401).json({ success: false });
 });
 
-// 6. レビュー削除
+// 7. レビュー削除
 app.delete('/api/reviews/:id', async (req, res) => {
     const { id } = req.params;
     try {
