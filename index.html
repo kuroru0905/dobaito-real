@@ -84,7 +84,8 @@
         .btn-group { display: flex; gap: 10px; align-items: center; margin-top: 15px; position: relative; z-index: 1; }
         .like-btn { background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; }
+        footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
+        footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
     </style>
 </head>
 <body>
@@ -144,7 +145,13 @@
     <div id="reviewList"></div>
 </div>
 
-<footer>&copy; 2026 道バイト・リアル</footer>
+<footer>
+    <p>&copy; 2026 道バイト・リアル</p>
+    <div style="margin-top: 10px;">
+        <a href="privacy.html">プライバシーポリシー</a> | 
+        <a href="contact.html">お問い合わせ</a>
+    </div>
+</footer>
 
 <script>
     const cityData = {
