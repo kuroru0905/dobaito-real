@@ -101,7 +101,6 @@
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
         .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; }
         .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; }
-        /* 🚀 職種タグ用スタイル */
         .job-tag { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; border: 1px solid #ffcc80; }
         
         .like-btn { 
@@ -154,6 +153,7 @@
             <select id="postJobType">
                 <option value="">選択してください</option>
                 <option value="飲食店">飲食店</option>
+                <option value="レジ・接客">レジ・接客</option>
                 <option value="軽作業">軽作業</option>
                 <option value="工事現場">工事現場</option>
                 <option value="その他">その他</option>
@@ -282,7 +282,6 @@
                 card.setAttribute('data-jojo', jojoText);
             }
 
-            // 🚀 既存投稿（job_typeがないもの）は「無指定」にする
             const jobTypeLabel = review.job_type || '無指定';
 
             card.innerHTML = `
@@ -321,14 +320,14 @@
         const cityEl = document.getElementById('postCity');
         const shopEl = document.getElementById('postShop');
         const contentEl = document.getElementById('postContent');
-        const jobTypeEl = document.getElementById('postJobType'); // 🚀 取得追加
+        const jobTypeEl = document.getElementById('postJobType');
         const btn = document.querySelector('.submit-btn');
 
         const area = areaEl.value;
         const city = cityEl.value;
         const shop = shopEl.value.trim();
         const content = contentEl.value.trim();
-        const job_type = jobTypeEl.value; // 🚀 取得追加
+        const job_type = jobTypeEl.value;
 
         if (!area || !city || !shop || !content || !job_type) return alert("全部埋めてくれ！");
 
@@ -342,14 +341,14 @@
             const response = await fetch('/api/reviews', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ area, city, shop, content, job_type }) // 🚀 job_type追加
+                body: JSON.stringify({ area, city, shop, content, job_type })
             });
 
             if (response.ok) {
                 alert("投稿完了ッ！お前の「リアル」は刻まれたぜ。");
                 shopEl.value = '';
                 contentEl.value = '';
-                jobTypeEl.value = ''; // リセット
+                jobTypeEl.value = '';
                 togglePostForm();
                 await loadReviews();
             } else {
