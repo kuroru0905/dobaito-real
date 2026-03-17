@@ -6,38 +6,47 @@
     <title>お問い合わせ | 道バイト・リアル</title>
     <style>
         :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; }
-        body { font-family: sans-serif; background-color: var(--snow-white); margin: 0; padding: 2rem; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: var(--hokkaido-blue); border-bottom: 2px solid var(--hokkaido-blue); padding-bottom: 0.5rem; }
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-        input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .submit-btn { background: var(--hokkaido-blue); color: white; border: none; padding: 1rem 2rem; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .back-link { display: block; margin-top: 1.5rem; text-align: center; color: #666; text-decoration: none; }
+        body { font-family: sans-serif; background-color: var(--snow-white); margin: 0; padding: 1rem; }
+        .container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: var(--hokkaido-blue); border-bottom: 2px solid var(--hokkaido-blue); padding-bottom: 0.5rem; margin-top: 0; }
+        p { font-size: 0.9rem; line-height: 1.6; color: #666; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; font-size: 0.9rem; }
+        input, textarea { width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        input:focus, textarea:focus { border-color: var(--hokkaido-blue); outline: none; }
+        .submit-btn { background: var(--hokkaido-blue); color: white; border: none; padding: 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: 0.3s; }
+        .submit-btn:hover { background: #004494; transform: translateY(-2px); }
+        .back-link { display: block; margin-top: 1.5rem; text-align: center; color: #999; text-decoration: none; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>📩 お問い合わせ</h1>
-    <p>掲載内容の修正依頼、削除要請、その他ご意見はこちらからお願いします。</p>
-    <form action="https://formspree.io/f/XXXXXX" method="POST"> <div class="form-group">
+    <p>掲載内容の修正依頼、削除要請、広告掲載のご相談、その他ご意見はこちらからお送りください。管理人が確認次第、折り返しご連絡いたします。</p>
+    
+    <form action="https://formspree.io/f/mpqyozeg" method="POST">
+        <div class="form-group">
             <label>お名前</label>
-            <input type="text" name="name" required>
+            <input type="text" name="name" placeholder="例：道産子 太郎" required>
         </div>
         <div class="form-group">
             <label>メールアドレス</label>
-            <input type="email" name="email" required>
+            <input type="email" name="_replyto" placeholder="例：example@mail.com" required>
         </div>
         <div class="form-group">
             <label>件名</label>
-            <input type="text" name="subject" required>
+            <input type="text" name="subject" placeholder="例：削除依頼について" required>
         </div>
         <div class="form-group">
             <label>メッセージ内容</label>
-            <textarea name="message" rows="5" required></textarea>
+            <textarea name="message" rows="5" placeholder="具体的な内容をご記入ください..." required></textarea>
         </div>
+        
+        <input type="hidden" name="_next" value="https://dobaito-real.onrender.com/">
+        
         <button type="submit" class="submit-btn">メッセージを送信する</button>
     </form>
+    
     <a href="/" class="back-link">← TOPへ戻る</a>
 </div>
 </body>
