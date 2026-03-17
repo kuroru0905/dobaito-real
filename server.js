@@ -17,6 +17,13 @@ const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
 // 🛡️ 連投防止用のメモリキャッシュだッ！
 const postHistory = new Map();
 
+// 🛡️ 禁断の「NGワードリスト」だッ！ここに含まれる単語は投稿を許さねえ。
+const NG_WORDS = [
+    "死ね", "殺す", "バカ", "アホ", "ゴミ", "カス", 
+    "キチガイ", "ガイジ", "消えろ", "クズ", "ゆい"
+    // 必要に応じて単語をここに追加しろッ！
+];
+
 function sanitize(text) {
     if (typeof text !== 'string') return text;
     return text
@@ -85,6 +92,16 @@ app.post('/api/reviews', async (req, res) => {
     
     if (!area || !city || !shop || !content || !job_type) {
         return res.status(400).send('データ不足だッ！');
+    }
+
+    // 🛡️ NGワードチェックの結界ッ！
+    const hasNGWord = NG_WORDS.some(word => 
+        shop.includes(word) || content.includes(word)
+    );
+
+    if (hasNGWord) {
+        console.log(`🚫 NGワード検出ッ！ IP: ${ip}`);
+        return res.status(400).send('不適切な言葉が含まれているぜッ！言葉遣いには気をつけな。');
     }
 
     try {
