@@ -10,6 +10,10 @@
         .delete-btn { background: #ff4d4d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
         .dismiss-btn { background: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 5px; }
         .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; }
+        /* 🚀 ダッシュボード用の追加スタイル */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #1a1a1a; color: #ffcf00; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px solid #ffcf00; box-shadow: 0 4px 15px rgba(255, 207, 0, 0.2); }
+        .stat-val { font-size: 2.5rem; font-weight: 900; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -28,8 +32,24 @@
     }
     async function renderAdminView() {
         const content = document.getElementById('adminContent');
-        // 🚀 UIの土台を1回だけ作成
+        
+        // 🚀 統計データを取得してダッシュボードを表示
+        const statsRes = await (await fetch('/api/admin/stats')).json();
+        
         content.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div>現在の総戦闘力 (総PV数)</div>
+                    <div class="stat-val">${statsRes.pv.toLocaleString()}</div>
+                    <small>※ページ読み込み回数だぜッ！</small>
+                </div>
+                <div class="stat-card" style="border-color: #4b0082; color: #fff;">
+                    <div>エリア別投稿分布</div>
+                    <div style="font-size: 0.8rem; margin-top:10px; text-align:left;">
+                        ${Object.entries(statsRes.areas).map(([area, count]) => `<div>・${area}: ${count}件</div>`).join('')}
+                    </div>
+                </div>
+            </div>
             <div style="margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 8px;">
                 <label style="font-weight: bold; cursor: pointer;">
                     <input type="checkbox" id="reportFilter" onchange="applyFilter()"> 🚩 削除依頼があった投稿のみ表示
@@ -79,7 +99,6 @@
         });
     }
 
-    // 🚀 更新後に renderAdminView ではなく applyFilter を呼ぶことでチェック状態を維持ッ！
     async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
     async function dismissReport(id) {
         if (confirm("この依頼を却下して通報をリセットするぜ？")) {

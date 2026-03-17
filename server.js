@@ -10,6 +10,19 @@ const SUPABASE_URL = 'https://sktxupbkynhlddgjxsvr.supabase.co';
 const SUPABASE_KEY = 'sb_secret_2NlBA2WJXTLmSkkjuvddgA_88yOWPW5'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// 📈 PVをカウントアップする「精密動作」関数だッ！
+async function incrementPV() {
+    try {
+        const { data: current } = await supabase.from('stats').select('count').eq('id', 'total_pv').single();
+        if (current) {
+            await supabase.from('stats').update({ count: current.count + 1 }).eq('id', 'total_pv');
+        } else {
+            // テーブルが空なら初期化するぜ
+            await supabase.from('stats').insert([{ id: 'total_pv', count: 1 }]);
+        }
+    } catch (e) { console.error("PV更新失敗だぜッ！", e); }
+}
+
 app.get('/api/reviews', async (req, res) => {
     try {
         const { data, error } = await supabase.from('reviews').select('*').order('id', { ascending: false });
@@ -18,8 +31,20 @@ app.get('/api/reviews', async (req, res) => {
     } catch (err) { res.status(500).send("サーバーエラー"); }
 });
 
+// 📊 戦闘力（統計）を取得するAPIを追加
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const { data } = await supabase.from('stats').select('count').eq('id', 'total_pv').single();
+        const { data: reviews } = await supabase.from('reviews').select('area');
+        const areaStats = (reviews || []).reduce((acc, r) => {
+            acc[r.area] = (acc[r.area] || 0) + 1;
+            return acc;
+        }, {});
+        res.json({ pv: data ? data.count : 0, areas: areaStats });
+    } catch (err) { res.status(500).send("統計取得エラー"); }
+});
+
 app.post('/api/reviews', async (req, res) => {
-    // 🚀 ratingを追加で受け取るッ！
     const { area, city, shop, content, job_type, rating } = req.body;
     
     if (!area || !city || !shop || !content || !job_type) {
@@ -31,7 +56,7 @@ app.post('/api/reviews', async (req, res) => {
             .from('reviews')
             .insert([{ 
                 area, city, shop, content, job_type, 
-                rating: rating || 3, // 🚀 星を保存
+                rating: rating || 3,
                 likes: 0,
                 is_reported: false,
                 report_reason: ''
@@ -80,6 +105,8 @@ app.post('/api/reviews/:id/dismiss', async (req, res) => {
 
 app.use((req, res, next) => {
     if (path.extname(req.path).length > 0) return next();
+    // 🏠 index.html にアクセスした瞬間にPVを+1するぜッ！
+    if (req.path === '/' || req.path === '/index.html') incrementPV();
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
