@@ -17,12 +17,10 @@ app.post('/api/reviews', (req, res) => {
     if (!area || !city || !shop || !content) {
         return res.status(400).send('入力データ不足だぜッ！');
     }
-
     const jstDate = new Intl.DateTimeFormat('ja-JP', {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
     }).format(new Date());
-
     const newReview = { id: Date.now(), area, city, shop, content, date: jstDate, likes: 0 };
     reviews.push(newReview);
     res.status(201).json(newReview);
@@ -34,8 +32,8 @@ app.post('/api/reviews/:id/like', (req, res) => {
     else { res.status(404).send('見つからねえ！'); }
 });
 
-// 🚀 ここを修正したぜ！エラーを回避する「黄金の形」だッ！
-app.get('/*', (req, res) => {
+// 🚀 これが最新ライブラリの壁をブチ破る「正規表現ワイルドカード」だッ！
+app.get('(.*)', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
