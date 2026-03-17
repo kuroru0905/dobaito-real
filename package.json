@@ -1,9 +1,10 @@
 {
-  "name": "dobaito",
+  "name": "dobaito-real",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "北海道のバイト選びにリアルを",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,9 +12,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
-    "express": "^5.2.1",
-    "pg": "^8.20.0",
-    "sqlite": "^5.1.1"
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2",
+    "path": "^0.12.7"
   }
 }
