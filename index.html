@@ -62,7 +62,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🚀 ランク・擬音テーマ設定（ここだけ改変ッ！） */
+        /* 🚀 ランク・擬音テーマ設定 */
         /* ゴゴゴ (10以上) */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; }
@@ -75,10 +75,13 @@
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
 
-        /* メメタァ！専用テーマ (漆黒) */
+        /* メメタァ！専用テーマ (漆黒) - ボタンの視認性も修正ッ！ */
         .review-card.ultra-rated[data-jojo="メメタァ！"] { border-left: 15px solid var(--jojo-purple); background: linear-gradient(135deg, #4b0082 0%, #000 100%); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .shop-name { color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .review-date { color: #ccc; }
+        .review-card.ultra-rated[data-jojo="メメタァ！"] .area-tag { background: rgba(255, 255, 255, 0.2); color: #fff; }
+        .review-card.ultra-rated[data-jojo="メメタァ！"] .city-tag { background: rgba(0, 86, 179, 0.4); color: #fff; }
+        .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
 
         .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
