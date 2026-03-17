@@ -6,7 +6,6 @@ const { createClient } = require('@supabase/supabase-js');
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// 🚀 指定箇所の書き換え：生のURLと鍵を消し去り、環境変数から読み込むッ！
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -14,17 +13,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Shake0905';
 const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
 
-// 🛡️ 連投防止用のメモリキャッシュだッ！
 const postHistory = new Map();
 
-// 🛡️ 禁断の「NGワードリスト」だッ！ここに含まれる単語は投稿を許さねえ。
 const NG_WORDS = [
     "死ね", "殺す", "バカ", "アホ", "ゴミ", "カス", 
     "キチガイ", "ガイジ", "消えろ", "クズ", "ゆい", "セクハラ", "ヤらせて", "エロ", "パパ活", "援交", 
     "ヌード", "おっぱい", "マンコ", "チンコ", "セックス",
     "クリトリス", "フェラ", "中出し", "バイブ", "ヤリマン",
     "処女", "童貞", "欲情", "変態", "露出", "○"
-    // 必要に応じて単語をここに追加しろッ！
 ];
 
 function sanitize(text) {
@@ -48,9 +44,13 @@ async function incrementPV() {
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
 
+// 🚀 レビュー取得時に返信数も一緒に持ってくるようにしたぜッ！
 app.get('/api/reviews', async (req, res) => {
     try {
-        const { data, error } = await supabase.from('reviews').select('*').order('id', { ascending: false });
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('*, comments(count)')
+            .order('id', { ascending: false });
         if (error) return res.status(500).json(error);
         res.json(data || []);
     } catch (err) { res.status(500).send("サーバーエラー"); }
@@ -71,18 +71,14 @@ app.get('/api/admin/stats', async (req, res) => {
 app.post('/api/reviews', async (req, res) => {
     const forwarded = req.headers['x-forwarded-for'];
     const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
-    
-    console.log(`📡 投稿リクエスト受信ッ！ IP: ${ip}`);
-
     const now = Date.now();
-    const limitWindow = 60 * 60 * 1000; // 1時間
-    const maxPosts = 5; // 最大投稿数
+    const limitWindow = 60 * 60 * 1000;
+    const maxPosts = 5;
 
     let userHistory = postHistory.get(ip) || [];
     userHistory = userHistory.filter(timestamp => now - timestamp < limitWindow);
 
     if (userHistory.length >= maxPosts) {
-        console.log(`🚫 荒らし検出ッ！ IP: ${ip}`);
         return res.status(429).send('連投しすぎだぜッ！1時間待ってから投稿してくれ。');
     }
 
@@ -97,35 +93,48 @@ app.post('/api/reviews', async (req, res) => {
         return res.status(400).send('データ不足だッ！');
     }
 
-    // 🛡️ NGワードチェックの結界ッ！
-    const hasNGWord = NG_WORDS.some(word => 
-        shop.includes(word) || content.includes(word)
-    );
-
-    if (hasNGWord) {
-        console.log(`🚫 NGワード検出ッ！ IP: ${ip}`);
-        return res.status(400).send('不適切な言葉が含まれているぜッ！言葉遣いには気をつけな。');
-    }
+    const hasNGWord = NG_WORDS.some(word => shop.includes(word) || content.includes(word));
+    if (hasNGWord) return res.status(400).send('不適切な言葉が含まれているぜッ！');
 
     try {
         const { data, error } = await supabase
             .from('reviews')
-            .insert([{ 
-                area, city, shop, content, job_type, 
-                rating: rating || 3,
-                likes: 0,
-                is_reported: false,
-                report_reason: ''
-            }])
+            .insert([{ area, city, shop, content, job_type, rating: rating || 3, likes: 0, is_reported: false, report_reason: '' }])
             .select();
-        
         if (error) return res.status(500).json(error);
-
         userHistory.push(now);
         postHistory.set(ip, userHistory);
-
         res.status(201).json(data[0]);
     } catch (err) { res.status(500).send("内部エラー"); }
+});
+
+// 🚀 返信（コメント）取得用API
+app.get('/api/reviews/:id/comments', async (req, res) => {
+    const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('review_id', req.params.id)
+        .order('id', { ascending: true });
+    if (error) return res.status(500).json(error);
+    res.json(data || []);
+});
+
+// 🚀 返信投稿用API（NGワード結界付き）
+app.post('/api/reviews/:id/comments', async (req, res) => {
+    const content = sanitize(req.body.content);
+    if (!content) return res.status(400).send('中身が空だぜッ！');
+
+    const hasNGWord = NG_WORDS.some(word => content.includes(word));
+    if (hasNGWord) return res.status(400).send('不適切な言葉が含まれているぜッ！');
+
+    try {
+        const { data, error } = await supabase
+            .from('comments')
+            .insert([{ review_id: req.params.id, content: content }])
+            .select();
+        if (error) return res.status(500).json(error);
+        res.status(201).json(data[0]);
+    } catch (err) { res.status(500).send("返信失敗だッ！"); }
 });
 
 app.post('/api/reviews/:id/like', async (req, res) => {
@@ -168,10 +177,7 @@ app.post('/api/reviews/:id/dismiss', async (req, res) => {
 });
 
 app.use((req, res, next) => {
-    if (!path.extname(req.path)) {
-        incrementPV();
-    }
-    
+    if (!path.extname(req.path)) incrementPV();
     if (path.extname(req.path).length > 0) return next();
     res.sendFile(path.join(__dirname, 'index.html'));
 });
