@@ -6,8 +6,9 @@ const { createClient } = require('@supabase/supabase-js');
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const SUPABASE_URL = 'https://sktxupbkynhlddgjxsvr.supabase.co';
-const SUPABASE_KEY = 'sb_secret_2NlBA2WJXTLmSkkjuvddgA_88yOWPW5'; 
+// 🚀 指定箇所の書き換え：生のURLと鍵を消し去り、環境変数から読み込むッ！
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Shake0905';
@@ -58,14 +59,16 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
-    // 🛡️ 連投チェック（精密動作性：B）
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
+    
+    console.log(`📡 投稿リクエスト受信ッ！ IP: ${ip}`);
+
     const now = Date.now();
-    const limitWindow = 60 * 60 * 1000; // 1時間（ミリ秒）
+    const limitWindow = 60 * 60 * 1000; // 1時間
     const maxPosts = 5; // 最大投稿数
 
     let userHistory = postHistory.get(ip) || [];
-    // 1時間以上前の古い記録を掃除するぜ
     userHistory = userHistory.filter(timestamp => now - timestamp < limitWindow);
 
     if (userHistory.length >= maxPosts) {
@@ -98,7 +101,6 @@ app.post('/api/reviews', async (req, res) => {
         
         if (error) return res.status(500).json(error);
 
-        // 🛡️ 投稿成功時に履歴を更新するぜ
         userHistory.push(now);
         postHistory.set(ip, userHistory);
 
