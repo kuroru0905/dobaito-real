@@ -270,7 +270,7 @@
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 キーワード検索ロジック：3文字以上一致判定（精密動作性）
+    // 🚀 キーワード検索ロジック：入力文字の何種類が対象に含まれるかを判定（3文字以上一致でヒット）
     function runAdvancedFilter() {
         const keyword = document.getElementById('keywordSearch').value.toLowerCase();
         const job = document.getElementById('filterJobType').value;
@@ -280,20 +280,25 @@
             const matchArea = (currentArea === 'すべて' || r.area === currentArea);
             const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
             
-            // 🎯 3文字以上一致ロジック
+            // 🎯 特殊検索ロジック
             let matchKeyword = true;
             if (keyword.length > 0) {
                 const shopText = (r.shop || "").toLowerCase();
                 const contentText = (r.content || "").toLowerCase();
                 const combinedText = shopText + contentText;
                 
+                // 重複を除いた入力文字のリスト
+                const keywordChars = [...new Set(keyword.split(''))];
                 let hitCount = 0;
-                // キーワードの各文字が対象文字列に何回含まれているかカウント
-                for (let char of keyword) {
-                    if (combinedText.includes(char)) hitCount++;
+                
+                for (let char of keywordChars) {
+                    if (combinedText.includes(char)) {
+                        hitCount++;
+                    }
                 }
-                // 3文字以上ヒット、またはキーワード自体が短い場合は全文字一致を条件にする
-                const threshold = Math.min(3, keyword.length);
+                
+                // 条件：3文字以上一致。ただしキーワード自体が3文字未満なら全文字一致を条件にする
+                const threshold = Math.min(3, keywordChars.length);
                 matchKeyword = (hitCount >= threshold);
             }
             
