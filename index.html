@@ -62,20 +62,20 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🚀 ランク・擬音テーマ設定 */
+        /* 🚀 ランク・擬音テーマ設定（干渉回避修正ッ！） */
         /* ゴゴゴ (10以上) */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; }
 
         /* バァァァン！(30以上) / ズキュウウゥン！(50以上) / メメタァ！(100以上) */
         .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
-        .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); }
+        .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); z-index: 1; }
 
         /* ズキュウウゥン！専用テーマ (ピンク) */
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
 
-        /* メメタァ！専用テーマ (漆黒) - ボタンの視認性も修正ッ！ */
+        /* メメタァ！専用テーマ (漆黒) */
         .review-card.ultra-rated[data-jojo="メメタァ！"] { border-left: 15px solid var(--jojo-purple); background: linear-gradient(135deg, #4b0082 0%, #000 100%); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .shop-name { color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .review-date { color: #ccc; }
@@ -83,6 +83,27 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .city-tag { background: rgba(0, 86, 179, 0.4); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
+
+        /* 📱 スマホ専用・干渉回避設定（精密動作性A） */
+        @media screen and (max-width: 768px) {
+            .review-card.ultra-rated::after {
+                font-size: 1.4rem; /* 小さくするッ！ */
+                top: 5px;          /* さらに上へッ！ */
+                right: 5px;        /* さらに右へッ！ */
+                transform: rotate(15deg); /* 角度をつけて逃げるッ！ */
+            }
+            /* ズキュウウゥン！も同様に逃がす */
+            .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after {
+                font-size: 1.5rem;
+                top: 2px;
+                right: 2px;
+                transform: rotate(-10deg);
+            }
+            /* メメタァ！は真ん中なので干渉しにくいが、少し小さく */
+            .review-card.ultra-rated[data-jojo="メメタァ！"]::after {
+                font-size: 1.8rem;
+            }
+        }
 
         .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
         .ad-label { position: absolute; top: -10px; left: 20px; background: #fff; padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999; }
