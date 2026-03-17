@@ -23,31 +23,53 @@
     </div>
 </div>
 <script>
-    // 🛡️ トークンの「真実」を照合して初期表示
     const SECRET_KEY = "MichiBaito_Secret_Session_Key_2026";
-    window.onload = () => { if (localStorage.getItem('adminToken') === SECRET_KEY) renderAdminView(); };
+    
+    window.onload = () => { 
+        if (localStorage.getItem('adminToken') === SECRET_KEY) {
+            console.log("🔓 トークン一致。自動ログインを試みるぜッ！");
+            renderAdminView(); 
+        }
+    };
 
     async function adminLogin() {
         const password = document.getElementById('adminPass').value;
-        const response = await fetch('/api/admin/login', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ password }) 
-        });
-        
-        if (response.ok) { 
-            const data = await response.json();
-            // 🚀 パスワードを保存するのは「やれやれだぜ」トークンだけを保存ッ！
-            localStorage.setItem('adminToken', data.token); 
-            renderAdminView(); 
-        } else {
-            alert("違うぜ！やり直しだ！"); 
+        try {
+            const response = await fetch('/api/admin/login', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ password }) 
+            });
+            
+            if (response.ok) { 
+                const data = await response.json();
+                localStorage.setItem('adminToken', data.token); 
+                console.log("🚀 サーバー認証成功。トークン保存ッ！");
+                
+                // 🚀 描画を試みる。ここで失敗してもエラーを吐くようにしたぜッ！
+                try {
+                    await renderAdminView(); 
+                } catch (renderErr) {
+                    console.error("🔥 描画エラーだッ！:", renderErr);
+                    alert("認証はできたが、表示に失敗したぜッ！F12のコンソールを見てくれ。");
+                }
+            } else {
+                alert("違うぜ！やり直しだ！"); 
+            }
+        } catch (fetchErr) {
+            console.error("📡 通信エラーだッ！:", fetchErr);
+            alert("サーバーと通信ができねえぜッ！");
         }
     }
 
     async function renderAdminView() {
         const content = document.getElementById('adminContent');
-        const statsRes = await (await fetch('/api/admin/stats')).json();
+        
+        // 🚀 APIからデータを取得。ここが失敗している可能性が高いッ！
+        const res = await fetch('/api/admin/stats');
+        if (!res.ok) throw new Error(`統計データ取得失敗 (Status: ${res.status})`);
+        
+        const statsRes = await res.json();
         
         content.innerHTML = `
             <div class="stats-grid">
@@ -77,36 +99,45 @@
 
     async function applyFilter() {
         const list = document.getElementById('adminList');
+        if (!list) return; // 🛡️ 万が一の防御
+        
         const showOnlyReported = document.getElementById('reportFilter').checked;
         list.innerHTML = "読み込み中...";
-        const reviews = await (await fetch('/api/reviews')).json();
-        list.innerHTML = "";
+        
+        try {
+            const res = await fetch('/api/reviews');
+            const reviews = await res.json();
+            list.innerHTML = "";
 
-        const filteredReviews = showOnlyReported ? reviews.filter(r => r.is_reported) : reviews;
+            const filteredReviews = showOnlyReported ? reviews.filter(r => r.is_reported) : reviews;
 
-        if (filteredReviews.length === 0) {
-            list.innerHTML = "<p style='color:#999; padding:20px;'>対象の投稿はねえぜッ！</p>";
-            return;
+            if (filteredReviews.length === 0) {
+                list.innerHTML = "<p style='color:#999; padding:20px;'>対象の投稿はねえぜッ！</p>";
+                return;
+            }
+
+            filteredReviews.forEach(review => {
+                const item = document.createElement('div');
+                item.className = 'review-item';
+                const reportAlert = review.is_reported ? `
+                    <div class="report-badge">
+                        ⚠️ 削除依頼: ${review.report_reason}
+                        <button class="dismiss-btn" onclick="dismissReport(${review.id})">依頼を却下</button>
+                    </div>` : '';
+                item.innerHTML = `
+                    <div style="flex-grow:1;">
+                        <div><b>${review.shop}</b> [${review.area}] <small>${review.created_at || review.date}</small></div>
+                        <div style="font-size:0.9rem; color:#666;">${review.content}</div>
+                        ${reportAlert}
+                    </div>
+                    <button class="delete-btn" onclick="deleteReview(${review.id})">削除</button>
+                `;
+                list.appendChild(item);
+            });
+        } catch (err) {
+            console.error("🔥 リスト取得失敗:", err);
+            list.innerHTML = "リストの読み込みに失敗したぜッ！";
         }
-
-        filteredReviews.forEach(review => {
-            const item = document.createElement('div');
-            item.className = 'review-item';
-            const reportAlert = review.is_reported ? `
-                <div class="report-badge">
-                    ⚠️ 削除依頼: ${review.report_reason}
-                    <button class="dismiss-btn" onclick="dismissReport(${review.id})">依頼を却下</button>
-                </div>` : '';
-            item.innerHTML = `
-                <div style="flex-grow:1;">
-                    <div><b>${review.shop}</b> [${review.area}] <small>${review.created_at || review.date}</small></div>
-                    <div style="font-size:0.9rem; color:#666;">${review.content}</div>
-                    ${reportAlert}
-                </div>
-                <button class="delete-btn" onclick="deleteReview(${review.id})">削除</button>
-            `;
-            list.appendChild(item);
-        });
     }
 
     async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
