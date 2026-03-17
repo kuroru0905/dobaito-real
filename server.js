@@ -10,12 +10,12 @@ const SUPABASE_URL = 'https://sktxupbkynhlddgjxsvr.supabase.co';
 const SUPABASE_KEY = 'sb_secret_2NlBA2WJXTLmSkkjuvddgA_88yOWPW5'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 🚀 パスワードをコードから追放！環境変数 ADMIN_PASSWORD を参照するぜ（未設定なら暫定 Shake0905）
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Shake0905';
-// 🚀 セッション用の合言葉（本来はランダム生成が望ましいが、まずは固定トークンで要塞化）
 const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
 
-// 🛡️ 入力データを無害化する「精密動作」関数だッ！
+// 🛡️ 連投防止用のメモリキャッシュだッ！
+const postHistory = new Map();
+
 function sanitize(text) {
     if (typeof text !== 'string') return text;
     return text
@@ -26,14 +26,12 @@ function sanitize(text) {
         .replace(/'/g, "&#039;");
 }
 
-// 📈 PVをカウントアップする「精密動作」関数だッ！
 async function incrementPV() {
     try {
         const { data: current } = await supabase.from('stats').select('count').eq('id', 'total_pv').single();
         if (current) {
             await supabase.from('stats').update({ count: current.count + 1 }).eq('id', 'total_pv');
         } else {
-            // テーブルが空なら初期化するぜ
             await supabase.from('stats').insert([{ id: 'total_pv', count: 1 }]);
         }
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
@@ -60,6 +58,21 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
+    // 🛡️ 連投チェック（精密動作性：B）
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const now = Date.now();
+    const limitWindow = 60 * 60 * 1000; // 1時間（ミリ秒）
+    const maxPosts = 5; // 最大投稿数
+
+    let userHistory = postHistory.get(ip) || [];
+    // 1時間以上前の古い記録を掃除するぜ
+    userHistory = userHistory.filter(timestamp => now - timestamp < limitWindow);
+
+    if (userHistory.length >= maxPosts) {
+        console.log(`🚫 荒らし検出ッ！ IP: ${ip}`);
+        return res.status(429).send('連投しすぎだぜッ！1時間待ってから投稿してくれ。');
+    }
+
     const area = sanitize(req.body.area);
     const city = sanitize(req.body.city);
     const shop = sanitize(req.body.shop);
@@ -82,7 +95,13 @@ app.post('/api/reviews', async (req, res) => {
                 report_reason: ''
             }])
             .select();
+        
         if (error) return res.status(500).json(error);
+
+        // 🛡️ 投稿成功時に履歴を更新するぜ
+        userHistory.push(now);
+        postHistory.set(ip, userHistory);
+
         res.status(201).json(data[0]);
     } catch (err) { res.status(500).send("内部エラー"); }
 });
@@ -106,11 +125,8 @@ app.post('/api/reviews/:id/report', async (req, res) => {
     } catch (err) { res.status(500).send("通報エラー"); }
 });
 
-// 🛡️ ログイン処理の要塞化ッ！
 app.post('/api/admin/login', (req, res) => {
-    // 🚀 ここで ADMIN_PASS と合致するか「精密動作性」でチェックッ！
     if (req.body.password === ADMIN_PASS) {
-        // 🚀 必ず「JSON」で返す。これが「真実」への鍵だッ！
         res.json({ token: ADMIN_TOKEN });
     } else {
         res.sendStatus(401);
