@@ -215,6 +215,8 @@
             <select id="sortOrder" onchange="runAdvancedFilter()">
                 <option value="new">新着順</option>
                 <option value="likes">良道（いいね）順</option>
+                <option value="rating_high">評価の高い順</option>
+                <option value="rating_low">評価の低い順</option>
             </select>
         </div>
     </div>
@@ -322,8 +324,16 @@
             return matchArea && matchJob && matchKeyword;
         });
 
-        if (sort === 'likes') filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-        else filtered.sort((a, b) => b.id - a.id);
+        // 🚀 ソートロジックの拡張だッ！
+        if (sort === 'likes') {
+            filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        } else if (sort === 'rating_high') {
+            filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (sort === 'rating_low') {
+            filtered.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+        } else {
+            filtered.sort((a, b) => b.id - a.id);
+        }
 
         renderReviews(filtered);
     }
@@ -362,7 +372,6 @@
             else if (likes >= 30) { statusClass = 'ultra-rated'; jojoText = 'バァァァン！'; }
             else if (likes >= 10) { statusClass = 'high-rated'; jojoText = 'ゴゴゴゴゴ…'; }
 
-            // 🚀 閲覧画面は「年月日」のみを表示するぜッ！
             const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', {
                 year: 'numeric', month: '2-digit', day: '2-digit'
             }) : '日付不明';
@@ -431,7 +440,6 @@
         try {
             const res = await fetch(`/api/reviews/${id}/comments`);
             const comments = await res.json();
-            // 🚀 返信も「年月日」のみを表示し、通報ボタンを精密に配置ッ！
             list.innerHTML = comments.map(c => {
                 const date = new Date(c.created_at).toLocaleDateString('ja-JP', {
                     year: 'numeric', month: '2-digit', day: '2-digit'
@@ -450,7 +458,6 @@
         } catch (e) { alert("返信の読み込みに失敗"); }
     }
 
-    // 🚀 返信通報機能だッ！
     async function reportComment(id) {
         const reason = prompt("この返信を通報する理由を入力しろッ！");
         if (!reason) return;
