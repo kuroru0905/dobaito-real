@@ -59,6 +59,11 @@
         .submit-btn:hover { background-color: #e60000; transform: translateY(-2px); }
         .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
 
+        /* 🚀 検索・ソート用スタイル追加 */
+        .controls-panel { background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .search-flex { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .search-flex > * { flex: 1; min-width: 150px; }
+
         .filter-container { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 2.5rem; justify-content: center; }
         .filter-btn { 
             background: white; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
@@ -71,6 +76,10 @@
             border-left: 8px solid var(--hokkaido-blue); position: relative; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
+
+        /* 🚀 星評価スタイル追加 */
+        .star-active { color: #f1c40f; }
+        .star-off { color: #ddd; }
         
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; }
@@ -129,7 +138,7 @@
         <h2>📢 現場のリアルを投稿する</h2>
         <div class="warning-box">
             <strong>【投稿の掟：礼儀を忘れるな】</strong>
-            個人を特定する情報の掲載、誹謗中傷をすれば人生を「”再起不能”（リタイア）」することになるぜ。
+            誹謗中傷をすれば人生を「”再起不能”（リタイア）」することになるぜ。
         </div>
 
         <div class="form-group">
@@ -161,6 +170,17 @@
         </div>
 
         <div class="form-group">
+            <label>総合評価</label>
+            <select id="postRating">
+                <option value="5">★★★★★ (最高だッ！)</option>
+                <option value="4">★★★★☆ (良いぜ)</option>
+                <option value="3" selected>★★★☆☆ (普通だな)</option>
+                <option value="2">★★☆☆☆ (微妙だぜ)</option>
+                <option value="1">★☆☆☆☆ (最悪だッ！)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
             <label>店名・現場名</label>
             <input type="text" id="postShop" placeholder="例：〇〇居酒屋 札幌店">
         </div>
@@ -173,12 +193,26 @@
         <button class="submit-btn" onclick="addReview()">この現実を投稿する</button>
     </section>
 
+    <div class="controls-panel">
+        <input type="text" id="keywordSearch" placeholder="🔍 店名や内容でキーワード検索..." oninput="runAdvancedFilter()">
+        <div class="search-flex">
+            <select id="filterJobType" onchange="runAdvancedFilter()">
+                <option value="すべて">職種：すべて</option>
+                <option value="飲食店">飲食店</option><option value="レジ・接客">レジ・接客</option><option value="軽作業">軽作業</option><option value="工事現場">工事現場</option><option value="その他">その他</option><option value="無指定">無指定</option>
+            </select>
+            <select id="sortOrder" onchange="runAdvancedFilter()">
+                <option value="new">新着順</option>
+                <option value="likes">良道（いいね）順</option>
+            </select>
+        </div>
+    </div>
+
     <div class="filter-container">
-        <button class="filter-btn active" onclick="filterReviews('すべて', this)">すべて</button>
-        <button class="filter-btn" onclick="filterReviews('道央', this)">道央</button>
-        <button class="filter-btn" onclick="filterReviews('道南', this)">道南</button>
-        <button class="filter-btn" onclick="filterReviews('道北', this)">道北</button>
-        <button class="filter-btn" onclick="filterReviews('道東', this)">道東</button>
+        <button class="filter-btn active" onclick="filterByArea('すべて', this)">すべて</button>
+        <button class="filter-btn" onclick="filterByArea('道央', this)">道央</button>
+        <button class="filter-btn" onclick="filterByArea('道南', this)">道南</button>
+        <button class="filter-btn" onclick="filterByArea('道北', this)">道北</button>
+        <button class="filter-btn" onclick="filterByArea('道東', this)">道東</button>
     </div>
 
     <div id="reviewList"></div>
@@ -193,6 +227,7 @@
 </footer>
 
 <script>
+    let currentArea = 'すべて';
     function togglePostForm() {
         const section = document.getElementById('postSection');
         const btn = document.getElementById('togglePostBtn');
@@ -229,23 +264,50 @@
     }
 
     let allReviews = [];
-
     async function loadReviews() {
         try {
             const response = await fetch('/api/reviews');
-            const data = await response.json();
-            allReviews = Array.isArray(data) ? data : [];
-            renderReviews(allReviews);
-        } catch (error) {
-            console.error("❌ データの取得に失敗したぜッ！:", error);
-        }
+            allReviews = await response.json();
+            runAdvancedFilter();
+        } catch (error) { console.error(error); }
+    }
+
+    // 🚀 高度なフィルター・ソートロジック
+    function runAdvancedFilter() {
+        const keyword = document.getElementById('keywordSearch').value.toLowerCase();
+        const job = document.getElementById('filterJobType').value;
+        const sort = document.getElementById('sortOrder').value;
+
+        let filtered = allReviews.filter(r => {
+            const matchArea = (currentArea === 'すべて' || r.area === currentArea);
+            const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
+            const matchKeyword = (r.shop.toLowerCase().includes(keyword) || r.content.toLowerCase().includes(keyword));
+            return matchArea && matchJob && matchKeyword;
+        });
+
+        if (sort === 'likes') filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        else filtered.sort((a, b) => b.id - a.id);
+
+        renderReviews(filtered);
+    }
+
+    function filterByArea(area, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentArea = area;
+        runAdvancedFilter();
+    }
+
+    function getStarsHtml(num) {
+        let html = "";
+        for(let i=1; i<=5; i++) html += `<span class="${i <= num ? 'star-active' : 'star-off'}">★</span>`;
+        return html;
     }
 
     function renderReviews(reviews) {
         const list = document.getElementById('reviewList');
         if (!list) return;
         list.innerHTML = '';
-        
         const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
 
         reviews.forEach((review, index) => {
@@ -255,21 +317,10 @@
             let statusClass = '';
             let jojoText = '';
 
-            if (likes >= 100) {
-                statusClass = 'ultra-rated';
-                jojoText = 'メメタァ！';
-            } else if (likes >= 50) {
-                statusClass = 'ultra-rated';
-                jojoText = 'ズキュウウゥン！';
-            } else if (likes >= 30) {
-                statusClass = 'ultra-rated'; 
-                jojoText = 'バァァァン！';
-            } else if (likes >= 10) {
-                statusClass = 'high-rated';
-                jojoText = 'ゴゴゴゴゴ…';
-            } else {
-                statusClass = '';
-            }
+            if (likes >= 100) { statusClass = 'ultra-rated'; jojoText = 'メメタァ！'; }
+            else if (likes >= 50) { statusClass = 'ultra-rated'; jojoText = 'ズキュウウゥン！'; }
+            else if (likes >= 30) { statusClass = 'ultra-rated'; jojoText = 'バァァァン！'; }
+            else if (likes >= 10) { statusClass = 'high-rated'; jojoText = 'ゴゴゴゴゴ…'; }
 
             const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', {
                 year: 'numeric', month: '2-digit', day: '2-digit'
@@ -278,9 +329,7 @@
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
 
             card.className = `review-card ${statusClass}`;
-            if (jojoText) {
-                card.setAttribute('data-jojo', jojoText);
-            }
+            if (jojoText) card.setAttribute('data-jojo', jojoText);
 
             const jobTypeLabel = review.job_type || '無指定';
 
@@ -291,7 +340,8 @@
                     <span class="city-tag">${review.city || '不明'}</span>
                     <span class="job-tag">${jobTypeLabel}</span>
                 </div>
-                <div class="review-date" style="font-size: 0.8rem; color: #999; margin-top: 8px;">🗓️ 投稿日: ${dateStr}</div>
+                <div style="margin: 8px 0; font-weight: bold; color: #444;">総合評価: ${getStarsHtml(review.rating || 3)}</div>
+                <div class="review-date" style="font-size: 0.8rem; color: #999;">🗓️ 投稿日: ${dateStr}</div>
                 <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${review.content}</p>
                 <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                     <button id="like-${review.id}" class="like-btn ${votedClass}" onclick="likeReview(${review.id})">良道！ (${likes})</button>
@@ -309,94 +359,52 @@
         });
     }
 
-    function filterReviews(area, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderReviews(area === 'すべて' ? allReviews : allReviews.filter(r => r.area === area));
-    }
-
     async function addReview() {
-        const areaEl = document.getElementById('postArea');
-        const cityEl = document.getElementById('postCity');
-        const shopEl = document.getElementById('postShop');
-        const contentEl = document.getElementById('postContent');
-        const jobTypeEl = document.getElementById('postJobType');
-        const btn = document.querySelector('.submit-btn');
+        const data = {
+            area: document.getElementById('postArea').value,
+            city: document.getElementById('postCity').value,
+            shop: document.getElementById('postShop').value.trim(),
+            content: document.getElementById('postContent').value.trim(),
+            job_type: document.getElementById('postJobType').value,
+            rating: parseInt(document.getElementById('postRating').value)
+        };
 
-        const area = areaEl.value;
-        const city = cityEl.value;
-        const shop = shopEl.value.trim();
-        const content = contentEl.value.trim();
-        const job_type = jobTypeEl.value;
-
-        if (!area || !city || !shop || !content || !job_type) return alert("全部埋めてくれ！");
-
-        const isReady = confirm("この内容で現場のリアルを刻み込むか？");
-        if (!isReady) return;
-
-        btn.disabled = true;
-        btn.innerText = "魂を刻み込み中...";
+        if (!data.area || !data.city || !data.shop || !data.content || !data.job_type) return alert("全部埋めてくれ！");
+        if (!confirm("この内容で現場のリアルを刻み込むか？")) return;
 
         try {
             const response = await fetch('/api/reviews', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ area, city, shop, content, job_type })
+                body: JSON.stringify(data)
             });
-
             if (response.ok) {
-                alert("投稿完了ッ！お前の「リアル」は刻まれたぜ。");
-                shopEl.value = '';
-                contentEl.value = '';
-                jobTypeEl.value = '';
-                togglePostForm();
-                await loadReviews();
-            } else {
-                alert("投稿に失敗ッ！");
+                alert("投稿完了ッ！");
+                document.getElementById('postShop').value = ''; document.getElementById('postContent').value = '';
+                togglePostForm(); await loadReviews();
             }
-        } catch (error) {
-            alert("通信エラーだ！");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "この現実を投稿する";
-        }
+        } catch (error) { alert("通信エラーだ！"); }
     }
 
     async function likeReview(id) {
         const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
-        if (votedIds.includes(id)) return alert("すでに良道！を叩き込んでいるぜッ！");
-
+        if (votedIds.includes(id)) return;
         try {
             const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
             if (response.ok) {
-                votedIds.push(id);
-                localStorage.setItem('votedIds', JSON.stringify(votedIds));
+                votedIds.push(id); localStorage.setItem('votedIds', JSON.stringify(votedIds));
                 await loadReviews();
             }
         } catch (error) { console.error(error); }
     }
 
     async function reportReview(id) {
-        const reason = prompt("削除を依頼する理由を入力してくれ（例：個人情報の掲載、誹謗中傷など）");
+        const reason = prompt("削除依頼の理由を入力");
         if (!reason) return;
-
         try {
-            const response = await fetch(`/api/reviews/${id}/report`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ reason }) 
-            });
-
-            if (response.ok) {
-                alert("管理者に報告を送信したぜ。確認を待ってくれッ！");
-                console.log(`✅ 通報完了: ID ${id}, 理由: ${reason}`);
-            } else {
-                alert("報告の送信に失敗したぜッ！サーバー側をチェックしてくれ。");
-            }
-        } catch (error) {
-            console.error("🔥 通報エラー:", error);
-            alert("通信エラーだぜッ！");
-        }
+            await fetch(`/api/reviews/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) });
+            alert("管理者に報告したぜ。");
+        } catch (error) { console.error(error); }
     }
 
     document.addEventListener('DOMContentLoaded', loadReviews);
