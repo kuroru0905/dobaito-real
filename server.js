@@ -10,6 +10,11 @@ const SUPABASE_URL = 'https://sktxupbkynhlddgjxsvr.supabase.co';
 const SUPABASE_KEY = 'sb_secret_2NlBA2WJXTLmSkkjuvddgA_88yOWPW5'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// 🚀 パスワードをコードから追放！環境変数 ADMIN_PASSWORD を参照するぜ（未設定なら暫定 Shake0905）
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Shake0905';
+// 🚀 セッション用の合言葉（本来はランダム生成が望ましいが、まずは固定トークンで要塞化）
+const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
+
 // 🛡️ 入力データを無害化する「精密動作」関数だッ！
 function sanitize(text) {
     if (typeof text !== 'string') return text;
@@ -28,6 +33,7 @@ async function incrementPV() {
         if (current) {
             await supabase.from('stats').update({ count: current.count + 1 }).eq('id', 'total_pv');
         } else {
+            // テーブルが空なら初期化するぜ
             await supabase.from('stats').insert([{ id: 'total_pv', count: 1 }]);
         }
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
@@ -54,7 +60,6 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
-    // 🛡️ 受け取った瞬間に全てサニタイズして毒を抜くッ！
     const area = sanitize(req.body.area);
     const city = sanitize(req.body.city);
     const shop = sanitize(req.body.shop);
@@ -94,16 +99,22 @@ app.post('/api/reviews/:id/like', async (req, res) => {
 });
 
 app.post('/api/reviews/:id/report', async (req, res) => {
-    const reason = sanitize(req.body.reason); // 🛡️ 報告理由もサニタイズ
+    const reason = sanitize(req.body.reason);
     try {
         await supabase.from('reviews').update({ is_reported: true, report_reason: reason }).eq('id', req.params.id);
         res.sendStatus(200);
     } catch (err) { res.status(500).send("通報エラー"); }
 });
 
+// 🛡️ ログイン処理の要塞化ッ！
 app.post('/api/admin/login', (req, res) => {
-    if (req.body.password === 'Shake0905') res.sendStatus(200);
-    else res.sendStatus(401);
+    // 🚀 ここで ADMIN_PASS と合致するか「精密動作性」でチェックッ！
+    if (req.body.password === ADMIN_PASS) {
+        // 🚀 必ず「JSON」で返す。これが「真実」への鍵だッ！
+        res.json({ token: ADMIN_TOKEN });
+    } else {
+        res.sendStatus(401);
+    }
 });
 
 app.delete('/api/reviews/:id', async (req, res) => {
