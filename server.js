@@ -103,10 +103,14 @@ app.post('/api/reviews/:id/dismiss', async (req, res) => {
     } catch (err) { res.status(500).send("却下失敗"); }
 });
 
+// 🏠 ミドルウェアでのPV判定を修正だッ！
 app.use((req, res, next) => {
+    // 🚀 修正ポイント: 拡張子がないリクエスト（ページ本体へのアクセス）をすべてカウント対象にするッ！
+    if (!path.extname(req.path)) {
+        incrementPV();
+    }
+    
     if (path.extname(req.path).length > 0) return next();
-    // 🏠 index.html にアクセスした瞬間にPVを+1するぜッ！
-    if (req.path === '/' || req.path === '/index.html') incrementPV();
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
