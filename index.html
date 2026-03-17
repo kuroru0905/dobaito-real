@@ -62,44 +62,31 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        .review-card.high-rated { 
-            border-left: 12px solid var(--jojo-purple); 
-            box-shadow: 0 0 25px rgba(75, 0, 130, 0.5); 
-            background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); 
-        }
-        .review-card.high-rated::before { 
-            content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 10px; 
-            font-size: 1.8rem; font-weight: 900; color: rgba(0, 0, 0, 0.15); 
-            font-style: italic; z-index: 0; text-shadow: 2px 2px 0 var(--jojo-purple);
-        }
+        /* 🚀 ジョジョ・ランク表示 */
+        .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
+        .review-card.high-rated::before { content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(0, 0, 0, 0.1); font-style: italic; }
+        .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
+        .review-card.ultra-rated::after { content: "バァァァン！"; position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); }
 
-        .review-card.ultra-rated { 
-            border-left: 15px solid #000; 
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); 
-            background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); 
-            transform: scale(1.01);
-        }
-        .review-card.ultra-rated::after { 
-            content: "バァァァン！"; 
-            position: absolute; top: 10px; right: 10px; 
-            font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 3px 3px 0 var(--jojo-gold); 
-            font-style: italic; transform: rotate(10deg); z-index: 2; opacity: 0.8;
-        }
+        .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
+        .ad-label { position: absolute; top: -10px; left: 20px; background: #fff; padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999; }
 
-        .ad-card {
-            background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px;
-            padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666;
-            font-size: 0.9rem; position: relative;
-        }
-        .ad-label {
-            position: absolute; top: -10px; left: 20px; background: #fff;
-            padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999;
-        }
-
-        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; z-index: 1; position: relative; }
-        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; z-index: 1; position: relative; }
-        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; z-index: 1; position: relative; }
+        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
+        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; }
+        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; }
         
+        /* 🚀 良道！ボタンの「覚悟」スタイル */
+        .like-btn { 
+            background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
+            padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        /* 🔴 押した後の赤色スタイル */
+        .like-btn.voted { 
+            background-color: var(--warning-red); border-color: var(--warning-red); color: white; 
+            animation: punch 0.3s ease;
+        }
+        @keyframes punch { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
     </style>
@@ -193,7 +180,6 @@
 
     let allReviews = [];
 
-    // 📡 レビュー取得
     async function loadReviews() {
         try {
             const response = await fetch('/api/reviews');
@@ -210,27 +196,32 @@
         if (!list) return;
         list.innerHTML = '';
         
+        // 🚀 localStorageから「いいね済みリスト」を取得
+        const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
+
         reviews.forEach((review, index) => {
             const card = document.createElement('div');
             const likes = review.likes || 0;
             let statusClass = likes >= 30 ? 'ultra-rated' : (likes >= 10 ? 'high-rated' : '');
             
-            // 🚀 Supabaseの created_at を日付として整形
             const dateStr = review.created_at ? new Date(review.created_at).toLocaleString('ja-JP', {
                 year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
             }) : '日付不明';
 
+            // 🚀 すでにいいねしてれば 'voted' クラスを付与
+            const votedClass = votedIds.includes(review.id) ? 'voted' : '';
+
             card.className = `review-card ${statusClass}`;
             card.innerHTML = `
-                <div class="review-header" style="position: relative; z-index: 1;">
+                <div class="review-header">
                     <span class="shop-name">${review.shop}</span>
                     <span class="area-tag">${review.area}</span>
                     <span class="city-tag">${review.city || '不明'}</span>
                 </div>
-                <div class="review-date" style="font-size: 0.8rem; color: #999; margin-top: 8px; position: relative; z-index: 1;">🗓️ 投稿日: ${dateStr}</div>
-                <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap; position: relative; z-index: 1;">${review.content}</p>
-                <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px; position: relative; z-index: 1;">
-                    <button class="like-btn" onclick="likeReview(${review.id})">良道！ (${likes})</button>
+                <div class="review-date" style="font-size: 0.8rem; color: #999; margin-top: 8px;">🗓️ 投稿日: ${dateStr}</div>
+                <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${review.content}</p>
+                <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+                    <button id="like-${review.id}" class="like-btn ${votedClass}" onclick="likeReview(${review.id})">良道！ (${likes})</button>
                     <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer;">🚩 削除依頼</button>
                 </div>
             `;
@@ -239,11 +230,7 @@
             if ((index + 1) % 3 === 0) {
                 const adCard = document.createElement('div');
                 adCard.className = 'ad-card';
-                adCard.innerHTML = `
-                    <span class="ad-label">Sponsored</span>
-                    <p>【広告表示エリア】</p>
-                    <p style="font-size: 0.8rem; color: #999;">あなたの「道」を応援する求人情報</p>
-                `;
+                adCard.innerHTML = `<span class="ad-label">Sponsored</span><p>【広告表示エリア】</p>`;
                 list.appendChild(adCard);
             }
         });
@@ -255,7 +242,6 @@
         renderReviews(area === 'すべて' ? allReviews : allReviews.filter(r => r.area === area));
     }
 
-    // 📡 投稿処理（確認ダイアログと完了アラートを完全実装！）
     async function addReview() {
         const areaEl = document.getElementById('postArea');
         const cityEl = document.getElementById('postCity');
@@ -270,16 +256,11 @@
 
         if (!area || !city || !shop || !content) return alert("全部埋めてくれ！");
 
-        // 🚀 1. 送信前の「確認」
-        const isReady = confirm(`【確認】\nエリア: ${area}\n市区町村: ${city}\n店名: ${shop}\n\nこの内容で現場のリアルを刻み込むか？`);
-        if (!isReady) {
-            console.log("🚫 投稿はキャンセルされたぜ。");
-            return;
-        }
+        const isReady = confirm("この内容で現場のリアルを刻み込むか？");
+        if (!isReady) return;
 
         btn.disabled = true;
         btn.innerText = "魂を刻み込み中...";
-        console.log("📡 送信開始ッ！データ:", { area, city, shop, content });
 
         try {
             const response = await fetch('/api/reviews', { 
@@ -289,32 +270,48 @@
             });
 
             if (response.ok) {
-                const result = await response.json();
-                console.log("✅ 成功だッ！Supabaseに保存されたぜ。ID:", result.id);
-                
-                // 🚀 2. 送信完了の通知
                 alert("投稿完了ッ！お前の「リアル」は刻まれたぜ。");
-
                 shopEl.value = '';
                 contentEl.value = '';
                 await loadReviews();
             } else {
-                const errData = await response.json();
-                console.error("❌ 失敗したぜ:", errData);
-                alert("投稿に失敗ッ！理由: " + (errData.message || "セキュリティかカラム設定のミスだぜ"));
+                alert("投稿に失敗ッ！");
             }
         } catch (error) {
-            console.error("🔥 通信エラー:", error);
-            alert("通信エラーだ！サーバーが動いているか確認してくれ");
+            alert("通信エラーだ！");
         } finally {
             btn.disabled = false;
             btn.innerText = "この現実を投稿する";
         }
     }
 
+    // 🚀 良道！ボタンの処理
     async function likeReview(id) {
-        await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
-        loadReviews();
+        const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]');
+        
+        // すでに押してたら「”無駄無駄”」だッ！
+        if (votedIds.includes(id)) {
+            alert("すでに良道！を叩き込んでいるぜッ！");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/reviews/${id}/like`, { method: 'POST' });
+            if (response.ok) {
+                // localStorageにIDを保存
+                votedIds.push(id);
+                localStorage.setItem('votedIds', JSON.stringify(votedIds));
+                
+                // ボタンの見た目を即座に変える
+                const btn = document.getElementById(`like-${id}`);
+                btn.classList.add('voted');
+                
+                // 再読み込み
+                await loadReviews();
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     async function reportReview(id) {
