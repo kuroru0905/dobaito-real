@@ -49,10 +49,10 @@
         .review-card { 
             background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; 
             border-left: 8px solid var(--hokkaido-blue); position: relative; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; /* はみ出し防止ッ！ */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden;
         }
         
-        /* 🔥 10以上：ゴゴゴ（high-rated） */
+        /* 🔥 10以上：ゴゴゴ（high-rated） - バランス調整版 */
         .review-card.high-rated { 
             border-left: 12px solid var(--jojo-purple); 
             box-shadow: 0 0 25px rgba(75, 0, 130, 0.5); 
@@ -60,11 +60,12 @@
         }
         .review-card.high-rated::before { 
             content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 15px; 
-            font-size: 2.2rem; font-weight: 900; color: rgba(0, 0, 0, 0.15); 
+            font-size: 1.8rem; /* バァンと合わせた絶妙なサイズ */
+            font-weight: 900; color: rgba(0, 0, 0, 0.15); 
             font-style: italic; z-index: 0; text-shadow: 2px 2px 0 var(--jojo-purple);
         }
 
-        /* ⚡️ 30以上：バァン！（ultra-rated） - 枠内調整済み */
+        /* ⚡️ 30以上：バァン！（ultra-rated） */
         .review-card.ultra-rated { 
             border-left: 15px solid #000; 
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); 
@@ -73,17 +74,10 @@
         }
         .review-card.ultra-rated::after { 
             content: "バァァァン！"; 
-            position: absolute; 
-            top: 5px; 
-            right: 10px; 
-            font-size: 1.8rem; 
-            font-weight: 900; 
-            color: #000; 
-            text-shadow: 2px 2px 0 var(--jojo-gold); 
-            font-style: italic; 
-            transform: rotate(5deg); 
-            z-index: 2;
-            opacity: 0.8;
+            position: absolute; top: 5px; right: 10px; 
+            font-size: 1.8rem; font-weight: 900; 
+            color: #000; text-shadow: 2px 2px 0 var(--jojo-gold); 
+            font-style: italic; transform: rotate(5deg); z-index: 2; opacity: 0.8;
         }
 
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
