@@ -96,15 +96,6 @@
             padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999;
         }
 
-        .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; z-index: 1; position: relative; }
-        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; z-index: 1; position: relative; }
-        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; z-index: 1; position: relative; }
-        .review-date { font-size: 0.8rem; color: #999; margin-top: 8px; z-index: 1; position: relative; }
-        .review-content { margin-top: 15px; line-height: 1.7; white-space: pre-wrap; position: relative; z-index: 1; }
-        
-        .btn-group { display: flex; gap: 10px; align-items: center; margin-top: 15px; position: relative; z-index: 1; }
-        .like-btn { background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
     </style>
@@ -174,7 +165,6 @@
 </footer>
 
 <script>
-    // 🏔️ Jemi-niisan フルスペック市区町村データ
     const cityData = {
         "道央": ["札幌市中央区", "札幌市北区", "札幌市東区", "札幌市白石区", "札幌市厚別区", "札幌市豊平区", "札幌市清田区", "札幌市南区", "札幌市西区", "札幌市手稲区", "江別市", "千歳市", "恵庭市", "北広島市", "石狩市", "当別町", "新篠津村", "夕張市", "岩見沢市", "美唄市", "芦別市", "赤平市", "三笠市", "滝川市", "砂川市", "歌志内市", "深川市", "南幌町", "奈井江町", "上砂川町", "由仁町", "長沼町", "栗山町", "月形町", "浦臼町", "新十津川町", "妹背牛町", "秩父別町", "雨竜町", "北竜町", "沼田町", "小樽市", "島牧村", "寿都町", "黒松内町", "蘭越町", "ニセコ町", "真狩村", "留寿都村", "喜茂別町", "京極町", "倶知安町", "共和町", "岩内町", "泊村", "神恵内村", "積丹町", "古平町", "仁木町", "余市町", "赤井川村"],
         "道南": ["函館市", "北斗市", "松前町", "福島町", "知内町", "木古内町", "七飯町", "鹿部町", "森町", "八雲町", "長万部町", "江差町", "上ノ国町", "厚沢部町", "乙部町", "奥尻町", "今金町", "せたな町", "室蘭市", "苫小牧市", "登別市", "伊達市", "豊浦町", "洞爺湖町", "壮瞥町", "白老町", "厚真町", "安平町", "むかわ町", "日高町", "平取町", "新冠町", "浦河町", "様似町", "えりも町", "新ひだか町"],
@@ -199,7 +189,6 @@
 
     let allReviews = [];
 
-    // 📡 レビュー取得
     async function loadReviews() {
         try {
             const response = await fetch('/api/reviews');
@@ -223,15 +212,15 @@
             
             card.className = `review-card ${statusClass}`;
             card.innerHTML = `
-                <div class="review-header">
-                    <span class="shop-name">${review.shop}</span>
-                    <span class="area-tag">${review.area}</span>
-                    <span class="city-tag">${review.city || '不明'}</span>
+                <div class="review-header" style="position: relative; z-index: 1;">
+                    <span class="shop-name" style="font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem;">${review.shop}</span>
+                    <span class="area-tag" style="background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px;">${review.area}</span>
+                    <span class="city-tag" style="background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px;">${review.city || '不明'}</span>
                 </div>
-                <div class="review-date">🗓️ 投稿日: ${review.date}</div>
-                <p class="review-content">${review.content}</p>
-                <div class="btn-group">
-                    <button class="like-btn" onclick="likeReview(${review.id})">🏔️ 道！ (${likes})</button>
+                <div class="review-date" style="font-size: 0.8rem; color: #999; margin-top: 8px; position: relative; z-index: 1;">🗓️ 投稿日: ${review.date}</div>
+                <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap; position: relative; z-index: 1;">${review.content}</p>
+                <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px; position: relative; z-index: 1;">
+                    <button class="like-btn" style="background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="likeReview(${review.id})">🏔️ 道！ (${likes})</button>
                     <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer;">🚩 削除依頼</button>
                 </div>
             `;
@@ -256,7 +245,6 @@
         renderReviews(area === 'すべて' ? allReviews : allReviews.filter(r => r.area === area));
     }
 
-    // 📡 投稿処理（ここに精密動作性を叩き込むッ！）
     async function addReview() {
         const areaEl = document.getElementById('postArea');
         const cityEl = document.getElementById('postCity');
@@ -271,7 +259,6 @@
 
         if (!area || !city || !shop || !content) return alert("全部埋めてくれ！");
 
-        // 🛡️ ボタンを無効化（連打はさせねえ！）
         btn.disabled = true;
         btn.innerText = "魂を刻み込み中...";
 
@@ -283,18 +270,18 @@
             });
 
             if (response.ok) {
-                // 🧹 フォームをクリアして再取得
+                // ✅ 投稿成功時にフォームを真っさらに！
                 shopEl.value = '';
                 contentEl.value = '';
                 await loadReviews();
             } else {
-                alert("投稿に失敗したぜッ！");
+                const errData = await response.json();
+                alert("投稿に失敗したぜッ！理由: " + (errData.details ? errData.details.message : "サーバーエラー"));
             }
         } catch (error) {
             console.error("エラー発生ッ！:", error);
             alert("通信エラーだ！");
         } finally {
-            // 🛡️ ボタンを戻す
             btn.disabled = false;
             btn.innerText = "この現実を投稿する";
         }
@@ -316,7 +303,6 @@
         alert("管理者に報告したぜ。");
     }
 
-    // 🚀 ロード時に実行（確実なDOM読み込みを保証）
     document.addEventListener('DOMContentLoaded', loadReviews);
 </script>
 </body>
