@@ -44,7 +44,7 @@ async function incrementPV() {
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
 
-// 🚀 レビュー取得時に返信数も一緒に持ってくるようにしたぜッ！
+// 🚀 カウントの取り方を修正して「(1)」になる問題を解決するぜッ！
 app.get('/api/reviews', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -52,7 +52,13 @@ app.get('/api/reviews', async (req, res) => {
             .select('*, comments(count)')
             .order('id', { ascending: false });
         if (error) return res.status(500).json(error);
-        res.json(data || []);
+
+        // 🛡️ フロントエンドが使いやすいようにカウントを数値に整形するッ！
+        const formattedData = data.map(r => ({
+            ...r,
+            commentCount: r.comments[0]?.count || 0
+        }));
+        res.json(formattedData);
     } catch (err) { res.status(500).send("サーバーエラー"); }
 });
 
@@ -108,7 +114,6 @@ app.post('/api/reviews', async (req, res) => {
     } catch (err) { res.status(500).send("内部エラー"); }
 });
 
-// 🚀 返信（コメント）取得用API
 app.get('/api/reviews/:id/comments', async (req, res) => {
     const { data, error } = await supabase
         .from('comments')
@@ -119,7 +124,6 @@ app.get('/api/reviews/:id/comments', async (req, res) => {
     res.json(data || []);
 });
 
-// 🚀 返信投稿用API（NGワード結界付き）
 app.post('/api/reviews/:id/comments', async (req, res) => {
     const content = sanitize(req.body.content);
     if (!content) return res.status(400).send('中身が空だぜッ！');
@@ -135,6 +139,37 @@ app.post('/api/reviews/:id/comments', async (req, res) => {
         if (error) return res.status(500).json(error);
         res.status(201).json(data[0]);
     } catch (err) { res.status(500).send("返信失敗だッ！"); }
+});
+
+// 🚀 管理パネル用：通報された返信を取得
+app.get('/api/admin/reported-comments', async (req, res) => {
+    const { data, error } = await supabase
+        .from('comments')
+        .select('*, reviews(shop)')
+        .eq('is_reported', true);
+    if (error) return res.status(500).json(error);
+    res.json(data || []);
+});
+
+// 🚀 返信の管理（削除・却下）API
+app.delete('/api/comments/:id', async (req, res) => {
+    const { error } = await supabase.from('comments').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json(error);
+    res.sendStatus(200);
+});
+
+app.post('/api/comments/:id/dismiss', async (req, res) => {
+    const { error } = await supabase.from('comments').update({ is_reported: false, report_reason: '' }).eq('id', req.params.id);
+    if (error) return res.status(500).json(error);
+    res.sendStatus(200);
+});
+
+// 🚀 返信への通報API（これも忘れずに実装だッ！）
+app.post('/api/comments/:id/report', async (req, res) => {
+    const reason = sanitize(req.body.reason);
+    const { error } = await supabase.from('comments').update({ is_reported: true, report_reason: reason }).eq('id', req.params.id);
+    if (error) return res.status(500).json(error);
+    res.sendStatus(200);
 });
 
 app.post('/api/reviews/:id/like', async (req, res) => {

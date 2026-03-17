@@ -4,15 +4,19 @@
     <meta charset="UTF-8">
     <title>管理者パネル | 道バイト・リアル</title>
     <style>
+        :root { --hokkaido-blue: #0056b3; --warning-red: #ff4d4d; --jojo-purple: #4b0082; --jojo-gold: #ffcf00; }
         body { font-family: sans-serif; background: #f0f4f8; padding: 2rem; }
         .admin-container { max-width: 900px; margin: auto; background: white; padding: 2rem; border-radius: 12px; }
-        .review-item { border-bottom: 1px solid #eee; padding: 1.5rem 0; display: flex; justify-content: space-between; align-items: center; }
+        .review-item { border-bottom: 1px solid #eee; padding: 1.5rem 0; display: flex; flex-direction: column; }
+        .item-main { display: flex; justify-content: space-between; align-items: flex-start; }
         .delete-btn { background: #ff4d4d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
         .dismiss-btn { background: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 5px; }
-        .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; }
+        .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #feb2b2; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: #1a1a1a; color: #ffcf00; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px solid #ffcf00; box-shadow: 0 4px 15px rgba(255, 207, 0, 0.2); }
         .stat-val { font-size: 2.5rem; font-weight: 900; margin: 10px 0; }
+        h2 { border-left: 8px solid var(--jojo-purple); padding-left: 15px; margin-top: 40px; color: var(--jojo-purple); }
+        .tag-date { font-size: 0.8rem; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -27,7 +31,6 @@
     
     window.onload = () => { 
         if (localStorage.getItem('adminToken') === SECRET_KEY) {
-            console.log("🔓 トークン一致。自動ログインを試みるぜッ！");
             renderAdminView(); 
         }
     };
@@ -44,31 +47,19 @@
             if (response.ok) { 
                 const data = await response.json();
                 localStorage.setItem('adminToken', data.token); 
-                console.log("🚀 サーバー認証成功。トークン保存ッ！");
-                
-                // 🚀 描画を試みる。ここで失敗してもエラーを吐くようにしたぜッ！
-                try {
-                    await renderAdminView(); 
-                } catch (renderErr) {
-                    console.error("🔥 描画エラーだッ！:", renderErr);
-                    alert("認証はできたが、表示に失敗したぜッ！F12のコンソールを見てくれ。");
-                }
+                await renderAdminView(); 
             } else {
                 alert("違うぜ！やり直しだ！"); 
             }
         } catch (fetchErr) {
-            console.error("📡 通信エラーだッ！:", fetchErr);
             alert("サーバーと通信ができねえぜッ！");
         }
     }
 
     async function renderAdminView() {
         const content = document.getElementById('adminContent');
-        
-        // 🚀 APIからデータを取得。ここが失敗している可能性が高いッ！
         const res = await fetch('/api/admin/stats');
-        if (!res.ok) throw new Error(`統計データ取得失敗 (Status: ${res.status})`);
-        
+        if (!res.ok) throw new Error("統計取得失敗");
         const statsRes = await res.json();
         
         content.innerHTML = `
@@ -76,7 +67,6 @@
                 <div class="stat-card">
                     <div>現在の総戦闘力 (総PV数)</div>
                     <div class="stat-val">${statsRes.pv.toLocaleString()}</div>
-                    <small>※ページ読み込み回数だぜッ！</small>
                 </div>
                 <div class="stat-card" style="border-color: #4b0082; color: #fff;">
                     <div>エリア別投稿分布</div>
@@ -85,22 +75,65 @@
                     </div>
                 </div>
             </div>
+
+            <h2>🚩 通報された返信 (Comments)</h2>
+            <div id="adminCommentList" style="margin-bottom: 40px;">読み込み中...</div>
+
+            <h2>📦 投稿管理リスト (Reviews)</h2>
             <div style="margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 8px;">
                 <label style="font-weight: bold; cursor: pointer;">
                     <input type="checkbox" id="reportFilter" onchange="applyFilter()"> 🚩 削除依頼があった投稿のみ表示
                 </label>
             </div>
-            <h3>投稿管理リスト</h3>
             <div id="adminList"></div>
             <br><button onclick="logout()">ログアウト</button>
         `;
         applyFilter(); 
+        loadReportedComments(); // 🚀 返信管理も同時に回すぜッ！
+    }
+
+    // 🚀 返信管理の描画処理だッ！
+    async function loadReportedComments() {
+        const list = document.getElementById('adminCommentList');
+        try {
+            const res = await fetch('/api/admin/reported-comments');
+            const comments = await res.json();
+            list.innerHTML = "";
+
+            if (comments.length === 0) {
+                list.innerHTML = "<p style='color:#999; padding:10px;'>通報された返信はねえぜッ！</p>";
+                return;
+            }
+
+            comments.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'review-item';
+                const date = new Date(c.created_at).toLocaleString('ja-JP');
+                item.innerHTML = `
+                    <div class="item-main">
+                        <div style="flex-grow:1;">
+                            <div style="margin-bottom:5px;">
+                                <span class="tag-date">🗓️ ${date}</span> 
+                                <b>元投稿: ${c.reviews?.shop || '不明'}</b>
+                            </div>
+                            <div style="background:#f9f9f9; padding:10px; border-radius:6px; font-size:0.9rem;">${c.content}</div>
+                            <div class="report-badge">⚠️ 理由: ${c.report_reason || '未入力'}</div>
+                        </div>
+                        <div style="margin-left:15px; display:flex; flex-direction:column; gap:5px;">
+                            <button class="delete-btn" onclick="deleteComment(${c.id})">消去</button>
+                            <button class="dismiss-btn" style="margin-left:0;" onclick="dismissComment(${c.id})">却下</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        } catch (err) {
+            list.innerHTML = "返信の読み込みに失敗だッ！";
+        }
     }
 
     async function applyFilter() {
         const list = document.getElementById('adminList');
-        if (!list) return; // 🛡️ 万が一の防御
-        
         const showOnlyReported = document.getElementById('reportFilter').checked;
         list.innerHTML = "読み込み中...";
         
@@ -108,45 +141,37 @@
             const res = await fetch('/api/reviews');
             const reviews = await res.json();
             list.innerHTML = "";
-
             const filteredReviews = showOnlyReported ? reviews.filter(r => r.is_reported) : reviews;
-
-            if (filteredReviews.length === 0) {
-                list.innerHTML = "<p style='color:#999; padding:20px;'>対象の投稿はねえぜッ！</p>";
-                return;
-            }
 
             filteredReviews.forEach(review => {
                 const item = document.createElement('div');
                 item.className = 'review-item';
                 const reportAlert = review.is_reported ? `
-                    <div class="report-badge">
-                        ⚠️ 削除依頼: ${review.report_reason}
-                        <button class="dismiss-btn" onclick="dismissReport(${review.id})">依頼を却下</button>
-                    </div>` : '';
+                    <div class="report-badge">⚠️ 理由: ${review.report_reason} <button class="dismiss-btn" onclick="dismissReport(${review.id})">却下</button></div>` : '';
                 item.innerHTML = `
-                    <div style="flex-grow:1;">
-                        <div><b>${review.shop}</b> [${review.area}] <small>${review.created_at || review.date}</small></div>
-                        <div style="font-size:0.9rem; color:#666;">${review.content}</div>
-                        ${reportAlert}
+                    <div class="item-main">
+                        <div style="flex-grow:1;">
+                            <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">${new Date(review.created_at).toLocaleString()}</small></div>
+                            <div style="font-size:0.9rem; color:#666; margin-top:5px;">${review.content}</div>
+                            ${reportAlert}
+                        </div>
+                        <button class="delete-btn" onclick="deleteReview(${review.id})">削除</button>
                     </div>
-                    <button class="delete-btn" onclick="deleteReview(${review.id})">削除</button>
                 `;
                 list.appendChild(item);
             });
-        } catch (err) {
-            console.error("🔥 リスト取得失敗:", err);
-            list.innerHTML = "リストの読み込みに失敗したぜッ！";
-        }
+        } catch (err) { list.innerHTML = "読み込み失敗だぜッ！"; }
     }
 
     async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
     async function dismissReport(id) {
-        if (confirm("この依頼を却下して通報をリセットするぜ？")) {
-            await fetch(`/api/reviews/${id}/dismiss`, { method: 'POST' });
-            applyFilter();
-        }
+        if (confirm("依頼を却下するぜ？")) { await fetch(`/api/reviews/${id}/dismiss`, { method: 'POST' }); applyFilter(); }
     }
+    
+    // 🚀 返信専用の操作関数だッ！
+    async function deleteComment(id) { if (confirm("この返信を消し飛ばすか？")) { await fetch(`/api/comments/${id}`, { method: 'DELETE' }); loadReportedComments(); } }
+    async function dismissComment(id) { if (confirm("通報を却下するぜ？")) { await fetch(`/api/comments/${id}/dismiss`, { method: 'POST' }); loadReportedComments(); } }
+
     function logout() { localStorage.removeItem('adminToken'); location.reload(); }
 </script>
 </body>
