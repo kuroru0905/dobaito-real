@@ -89,10 +89,10 @@
             <br><button onclick="logout()">ログアウト</button>
         `;
         applyFilter(); 
-        loadReportedComments(); // 🚀 返信管理も同時に回すぜッ！
+        loadReportedComments(); 
     }
 
-    // 🚀 返信管理の描画処理だッ！
+    // 🚀 返信管理の描画処理：年月日・時間を精密に表示するぜッ！
     async function loadReportedComments() {
         const list = document.getElementById('adminCommentList');
         try {
@@ -108,7 +108,10 @@
             comments.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'review-item';
-                const date = new Date(c.created_at).toLocaleString('ja-JP');
+                // 🚀 返信の日時を「年月日 時間」で表示
+                const date = new Date(c.created_at).toLocaleString('ja-JP', {
+                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
                 item.innerHTML = `
                     <div class="item-main">
                         <div style="flex-grow:1;">
@@ -120,7 +123,7 @@
                             <div class="report-badge">⚠️ 理由: ${c.report_reason || '未入力'}</div>
                         </div>
                         <div style="margin-left:15px; display:flex; flex-direction:column; gap:5px;">
-                            <button class="delete-btn" onclick="deleteComment(${c.id})">消去</button>
+                            <button class="delete-btn" onclick="deleteComment(${c.id})">削除</button>
                             <button class="dismiss-btn" style="margin-left:0;" onclick="dismissComment(${c.id})">却下</button>
                         </div>
                     </div>
@@ -146,12 +149,16 @@
             filteredReviews.forEach(review => {
                 const item = document.createElement('div');
                 item.className = 'review-item';
+                // 🚀 投稿の日時も返信と同じ「年月日 時間」のフォーマットに統一ッ！
+                const date = new Date(review.created_at).toLocaleString('ja-JP', {
+                    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
                 const reportAlert = review.is_reported ? `
                     <div class="report-badge">⚠️ 理由: ${review.report_reason} <button class="dismiss-btn" onclick="dismissReport(${review.id})">却下</button></div>` : '';
                 item.innerHTML = `
                     <div class="item-main">
                         <div style="flex-grow:1;">
-                            <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">${new Date(review.created_at).toLocaleString()}</small></div>
+                            <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">🗓️ ${date}</small></div>
                             <div style="font-size:0.9rem; color:#666; margin-top:5px;">${review.content}</div>
                             ${reportAlert}
                         </div>
@@ -163,12 +170,11 @@
         } catch (err) { list.innerHTML = "読み込み失敗だぜッ！"; }
     }
 
-    async function deleteReview(id) { if (confirm("消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
+    async function deleteReview(id) { if (confirm("この投稿を消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
     async function dismissReport(id) {
         if (confirm("依頼を却下するぜ？")) { await fetch(`/api/reviews/${id}/dismiss`, { method: 'POST' }); applyFilter(); }
     }
     
-    // 🚀 返信専用の操作関数だッ！
     async function deleteComment(id) { if (confirm("この返信を消し飛ばすか？")) { await fetch(`/api/comments/${id}`, { method: 'DELETE' }); loadReportedComments(); } }
     async function dismissComment(id) { if (confirm("通報を却下するぜ？")) { await fetch(`/api/comments/${id}/dismiss`, { method: 'POST' }); loadReportedComments(); } }
 
