@@ -88,7 +88,9 @@
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
 
+        /* 🚀 メメタァ！専用テーマ修正（白文字強制ルール追加） */
         .review-card.ultra-rated[data-jojo="メメタァ！"] { border-left: 15px solid var(--jojo-purple); background: linear-gradient(135deg, #4b0082 0%, #000 100%); color: #fff; }
+        .review-card.ultra-rated[data-jojo="メメタァ！"] .total-rating-label { color: #fff !important; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .shop-name { color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .review-date { color: #ccc; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .area-tag { background: rgba(255, 255, 255, 0.2); color: #fff; }
@@ -270,7 +272,6 @@
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 キーワード検索ロジック：入力文字の何種類が対象に含まれるかを判定（3文字以上一致でヒット）
     function runAdvancedFilter() {
         const keyword = document.getElementById('keywordSearch').value.toLowerCase();
         const job = document.getElementById('filterJobType').value;
@@ -280,14 +281,12 @@
             const matchArea = (currentArea === 'すべて' || r.area === currentArea);
             const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
             
-            // 🎯 特殊検索ロジック
             let matchKeyword = true;
             if (keyword.length > 0) {
                 const shopText = (r.shop || "").toLowerCase();
                 const contentText = (r.content || "").toLowerCase();
                 const combinedText = shopText + contentText;
                 
-                // 重複を除いた入力文字のリスト
                 const keywordChars = [...new Set(keyword.split(''))];
                 let hitCount = 0;
                 
@@ -297,7 +296,6 @@
                     }
                 }
                 
-                // 条件：3文字以上一致。ただしキーワード自体が3文字未満なら全文字一致を条件にする
                 const threshold = Math.min(3, keywordChars.length);
                 matchKeyword = (hitCount >= threshold);
             }
@@ -360,7 +358,7 @@
                     <span class="city-tag">${review.city || '不明'}</span>
                     <span class="job-tag">${jobTypeLabel}</span>
                 </div>
-                <div style="margin: 8px 0; font-weight: bold; color: #444;">総合評価: ${getStarsHtml(review.rating || 3)}</div>
+                <div class="total-rating-label" style="margin: 8px 0; font-weight: bold; color: #444;">総合評価: ${getStarsHtml(review.rating || 3)}</div>
                 <div class="review-date" style="font-size: 0.8rem; color: #999;">🗓️ 投稿日: ${dateStr}</div>
                 <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${review.content}</p>
                 <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
