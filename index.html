@@ -45,8 +45,14 @@
         }
         .filter-btn.active { background: var(--hokkaido-blue); color: white; }
 
-        .review-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border-left: 8px solid var(--hokkaido-blue); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* レビューカード基本 */
+        .review-card { 
+            background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; 
+            border-left: 8px solid var(--hokkaido-blue); position: relative; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; /* はみ出し防止ッ！ */
+        }
         
+        /* 🔥 10以上：ゴゴゴ（high-rated） */
         .review-card.high-rated { 
             border-left: 12px solid var(--jojo-purple); 
             box-shadow: 0 0 25px rgba(75, 0, 130, 0.5); 
@@ -58,16 +64,26 @@
             font-style: italic; z-index: 0; text-shadow: 2px 2px 0 var(--jojo-purple);
         }
 
+        /* ⚡️ 30以上：バァン！（ultra-rated） - 枠内調整済み */
         .review-card.ultra-rated { 
             border-left: 15px solid #000; 
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); 
             background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); 
-            transform: scale(1.02);
+            transform: scale(1.01);
         }
         .review-card.ultra-rated::after { 
-            content: "バァァァン！"; position: absolute; top: -15px; right: -10px; 
-            font-size: 2.5rem; font-weight: 900; color: #000; text-shadow: 3px 3px 0 var(--jojo-gold); 
-            font-style: italic; transform: rotate(10deg); z-index: 2;
+            content: "バァァァン！"; 
+            position: absolute; 
+            top: 5px; 
+            right: 10px; 
+            font-size: 1.8rem; 
+            font-weight: 900; 
+            color: #000; 
+            text-shadow: 2px 2px 0 var(--jojo-gold); 
+            font-style: italic; 
+            transform: rotate(5deg); 
+            z-index: 2;
+            opacity: 0.8;
         }
 
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
@@ -101,10 +117,10 @@
             <label>エリア</label>
             <select id="postArea" onchange="updateCities()">
                 <option value="">選択してください</option>
-                <option value="道央">道央地方（石狩・空知・後志）</option>
-                <option value="道南">道南地方（渡島・檜山・胆振・日高）</option>
-                <option value="道北">道北地方</option>
-                <option value="道東">道東地方</option>
+                <option value="道央">道央地方（札幌・石狩・空知・後志）</option>
+                <option value="道南">道南地方（函館・登別・室蘭・苫小牧・日高）</option>
+                <option value="道北">道北地方（旭川・留萌・宗谷）</option>
+                <option value="道東">道東地方（帯広・釧路・根室・オホーツク）</option>
             </select>
         </div>
 
