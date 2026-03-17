@@ -63,9 +63,9 @@
         }
         
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
-        .review-card.high-rated::before { content: "ゴゴゴゴゴ…"; position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(0, 0, 0, 0.1); font-style: italic; }
+        .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(0, 0, 0, 0.1); font-style: italic; }
         .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
-        .review-card.ultra-rated::after { content: "バァァァン！"; position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); }
+        .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); }
 
         .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
         .ad-label { position: absolute; top: -10px; left: 20px; background: #fff; padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999; }
@@ -195,8 +195,27 @@
         reviews.forEach((review, index) => {
             const card = document.createElement('div');
             const likes = review.likes || 0;
-            let statusClass = likes >= 30 ? 'ultra-rated' : (likes >= 10 ? 'high-rated' : '');
             
+            // 🚀 Jemi-niisan専用・精密ランク判定ロジック
+            let statusClass = '';
+            let jojoText = '';
+
+            if (likes >= 100) {
+                statusClass = 'ultra-rated';
+                jojoText = 'メメタァ！';
+            } else if (likes >= 50) {
+                statusClass = 'ultra-rated';
+                jojoText = 'ズキュウウゥン！';
+            } else if (likes >= 30) {
+                statusClass = 'ultra-rated'; 
+                jojoText = 'バァァァン！';
+            } else if (likes >= 10) {
+                statusClass = 'high-rated';
+                jojoText = 'ゴゴゴゴゴ…';
+            } else {
+                statusClass = '';
+            }
+
             const dateStr = review.created_at ? new Date(review.created_at).toLocaleString('ja-JP', {
                 year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
             }) : '日付不明';
@@ -204,6 +223,10 @@
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
 
             card.className = `review-card ${statusClass}`;
+            if (jojoText) {
+                card.setAttribute('data-jojo', jojoText);
+            }
+
             card.innerHTML = `
                 <div class="review-header">
                     <span class="shop-name">${review.shop}</span>
@@ -291,7 +314,6 @@
         } catch (error) { console.error(error); }
     }
 
-    // 🚩 削除依頼：サーバーへ「真実」を届けるッ！
     async function reportReview(id) {
         const reason = prompt("削除を依頼する理由を入力してくれ（例：個人情報の掲載、誹謗中傷など）");
         if (!reason) return;
