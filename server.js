@@ -16,23 +16,16 @@ const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
 const postHistory = new Map();
 
 const NG_WORDS = [
-    // 攻撃的・誹謗中傷（ひらがな・カナ網羅）
     "死ね", "シネ", "殺す", "ころす", "コロス", "殺意", "バカ", "ばか", "馬鹿", "アホ", "あほ", "阿呆", 
     "ゴミ", "ごみ", "カス", "かす", "きがい", "キチガイ", "きちがい", "ガイジ", "がいじ", "ガイキチ", 
     "消えろ", "きえろ", "クズ", "くず", "屑", "しねよ", "タヒね", "死。ね",
-
-    // 差別・特定の人物・不快語
     "ゆい", "ユイ",
-
-    // 性的・卑猥・不適切（すり抜け対策込み）
     "セクハラ", "せくはら", "ヤらせて", "やらせて", "エロ", "えろ", "パパ活", "ぱぱかつ", "パパかつ", 
     "援交", "えんこう", "エンコウ", "援助交際", "ヌード", "ぬーど", "おっぱい", "オッパイ", "おぱい", 
     "マンコ", "まんこ", "満子", "チンコ", "ちんこ", "珍子", "チンポ", "ちんぽ", "セックス", "せっくす", 
     "クリトリス", "くりとりす", "フェラ", "ふぇら", "中出し", "なかだし", "バイブ", "ばいぶ", 
     "ヤリマン", "やりまん", "処女", "しょじょ", "ショジョ", "童貞", "どうてい", "ドウテイ", 
     "オナニー", "おなにー", "マ○コ", "チ○コ", "セッ○ス", "○",
-
-    // その他、隠語的表現
     "裏アカ", "裏垢", "直メ", "カカオ", "ライン交換", "LINE交換"
 ];
 
@@ -57,7 +50,6 @@ async function incrementPV() {
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
 
-// 🚀 カウントの取り方を修正して「(1)」になる問題を解決するぜッ！
 app.get('/api/reviews', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -65,14 +57,44 @@ app.get('/api/reviews', async (req, res) => {
             .select('*, comments(count)')
             .order('id', { ascending: false });
         if (error) return res.status(500).json(error);
-
-        // 🛡️ フロントエンドが使いやすいようにカウントを数値に整形するッ！
         const formattedData = data.map(r => ({
             ...r,
             commentCount: r.comments[0]?.count || 0
         }));
         res.json(formattedData);
     } catch (err) { res.status(500).send("サーバーエラー"); }
+});
+
+// 🚀 コラム取得用API
+app.get('/api/columns', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('columns').select('*').order('id', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) { res.status(500).send("コラム取得失敗"); }
+});
+
+// 🚀 管理者専用：コラム投稿用API
+app.post('/api/admin/columns', async (req, res) => {
+    const { title, content } = req.body;
+    if (!title || !content) return res.status(400).send('タイトルと内容が必要だッ！');
+    try {
+        const { data, error } = await supabase
+            .from('columns')
+            .insert([{ title: sanitize(title), content: sanitize(content) }])
+            .select();
+        if (error) throw error;
+        res.status(201).json(data[0]);
+    } catch (err) { res.status(500).send("コラム投稿失敗"); }
+});
+
+// 🚀 管理者専用：コラム削除用API
+app.delete('/api/admin/columns/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('columns').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.sendStatus(200);
+    } catch (err) { res.status(500).send("コラム削除失敗"); }
 });
 
 app.get('/api/admin/stats', async (req, res) => {
@@ -154,7 +176,6 @@ app.post('/api/reviews/:id/comments', async (req, res) => {
     } catch (err) { res.status(500).send("返信失敗だッ！"); }
 });
 
-// 🚀 管理パネル用：通報された返信を取得
 app.get('/api/admin/reported-comments', async (req, res) => {
     const { data, error } = await supabase
         .from('comments')
@@ -164,7 +185,6 @@ app.get('/api/admin/reported-comments', async (req, res) => {
     res.json(data || []);
 });
 
-// 🚀 返信の管理（削除・却下）API
 app.delete('/api/comments/:id', async (req, res) => {
     const { error } = await supabase.from('comments').delete().eq('id', req.params.id);
     if (error) return res.status(500).json(error);
@@ -177,7 +197,6 @@ app.post('/api/comments/:id/dismiss', async (req, res) => {
     res.sendStatus(200);
 });
 
-// 🚀 返信への通報API（これも忘れずに実装だッ！）
 app.post('/api/comments/:id/report', async (req, res) => {
     const reason = sanitize(req.body.reason);
     const { error } = await supabase.from('comments').update({ is_reported: true, report_reason: reason }).eq('id', req.params.id);

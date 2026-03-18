@@ -20,6 +20,11 @@
         /* 🚀 投稿内返信リスト用のスタイル */
         .inner-comment-list { margin-top: 15px; padding-left: 20px; border-left: 3px solid #ddd; }
         .inner-comment-item { background: #f9f9f9; padding: 8px; border-radius: 6px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        
+        /* 🚀 コラム投稿フォーム用スタイル */
+        .column-form { background: #f9f9f9; padding: 1.5rem; border-radius: 12px; border: 2px solid var(--jojo-purple); margin-bottom: 20px; }
+        .column-form input, .column-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .column-btn { background: var(--jojo-purple); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -79,6 +84,14 @@
                 </div>
             </div>
 
+            <h2>📜 管理者コラムを刻む</h2>
+            <div class="column-form">
+                <input type="text" id="colTitle" placeholder="魂のタイトル...">
+                <textarea id="colContent" rows="5" placeholder="北海道のバイト事情について熱く語れッ！"></textarea>
+                <button class="column-btn" onclick="postColumn()">コラムを公開する</button>
+            </div>
+            <div id="adminColumnList" style="margin-bottom: 30px;"></div>
+
             <h2>🚩 通報された返信 (Comments)</h2>
             <div id="adminCommentList" style="margin-bottom: 40px;">読み込み中...</div>
 
@@ -93,6 +106,52 @@
         `;
         applyFilter(); 
         loadReportedComments(); 
+        loadAdminColumns(); // 🚀 管理用コラムリストも読み込むぜッ！
+    }
+
+    // 🚀 コラム投稿API呼び出し
+    async function postColumn() {
+        const title = document.getElementById('colTitle').value.trim();
+        const content = document.getElementById('colContent').value.trim();
+        if (!title || !content) return alert("タイトルと内容を埋めろッ！");
+        if (!confirm("この知恵袋を公開してもいいか？")) return;
+
+        const res = await fetch('/api/admin/columns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content })
+        });
+        if (res.ok) {
+            alert("コラムを刻み込んだぜッ！");
+            document.getElementById('colTitle').value = "";
+            document.getElementById('colContent').value = "";
+            loadAdminColumns();
+        } else {
+            alert("投稿失敗だ。");
+        }
+    }
+
+    // 🚀 管理用コラムリスト読み込み
+    async function loadAdminColumns() {
+        const list = document.getElementById('adminColumnList');
+        const res = await fetch('/api/columns');
+        const columns = await res.json();
+        list.innerHTML = columns.map(c => `
+            <div class="review-item" style="padding: 10px; background: #fff; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b>${c.title}</b>
+                    <button class="delete-btn" style="padding:4px 8px; font-size:0.7rem;" onclick="deleteColumn(${c.id})">コラム削除</button>
+                </div>
+                <div style="font-size:0.8rem; color:#888; margin-top:5px;">🗓️ ${new Date(c.created_at).toLocaleDateString()}</div>
+            </div>
+        `).join('');
+    }
+
+    async function deleteColumn(id) {
+        if (confirm("このコラムを消し去るか？")) {
+            await fetch(`/api/admin/columns/${id}`, { method: 'DELETE' });
+            loadAdminColumns();
+        }
     }
 
     async function loadReportedComments() {
@@ -150,7 +209,6 @@
                 item.className = 'review-item';
                 const date = new Date(review.created_at).toLocaleString('ja-JP');
                 
-                // 🚀 その投稿に紐づく返信をすべて取得して表示するッ！
                 const cRes = await fetch(`/api/reviews/${review.id}/comments`);
                 const comments = await cRes.json();
                 let innerCommentsHtml = "";
