@@ -31,11 +31,15 @@
         
         /* 🚀 エリアランキング用スタイル */
         .ranking-panel { background: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid var(--jojo-gold); }
-        .ranking-title { font-weight: bold; font-size: 1rem; color: #444; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .ranking-title { font-weight: bold; font-size: 1rem; color: #444; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .rank-tags { display: flex; gap: 8px; flex-wrap: wrap; }
         .rank-tag { background: #fff; border: 1px solid #ddd; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--hokkaido-blue); }
         .rank-tag:hover { border-color: var(--hokkaido-blue); background: #eef6ff; }
         .rank-tag span { color: #999; margin-left: 4px; font-size: 0.75rem; }
+
+        /* 🚀 クリアボタン用スタイル */
+        .clear-filter-btn { background: #f0f0f0; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; color: #666; cursor: pointer; font-weight: normal; }
+        .clear-filter-btn:hover { background: #e0e0e0; color: #333; }
 
         .post-section { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         .post-section.active { display: block; animation: slideDown 0.3s ease; }
@@ -107,7 +111,6 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
 
-        /* 🚀 SNSシェアボタン用スタイル */
         .sns-share-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; }
         .share-btn { border: none; padding: 6px 12px; border-radius: 6px; color: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 5px; }
         .btn-x { background-color: var(--x-black); }
@@ -163,7 +166,10 @@
 
 <div class="container">
     <div class="ranking-panel" id="rankingPanel" style="display:none;">
-        <div class="ranking-title">🔥 注目の熱い市区町村</div>
+        <div class="ranking-title">
+            <span>🔥 注目の熱い市区町村</span>
+            <button class="clear-filter-btn" onclick="clearCityFilter()">すべて表示 ↺</button>
+        </div>
         <div class="rank-tags" id="rankTags"></div>
     </div>
 
@@ -330,13 +336,12 @@
         try {
             const response = await fetch('/api/reviews');
             allReviews = await response.json();
-            updateRanking(); // 🚀 ランキング更新ッ！
+            updateRanking();
             runAdvancedFilter();
             loadColumns();
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 エリアランキング生成ロジック
     function updateRanking() {
         const panel = document.getElementById('rankingPanel');
         const tags = document.getElementById('rankTags');
@@ -361,6 +366,13 @@
         input.value = city;
         runAdvancedFilter();
         input.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 🚀 フィルター解除機能だッ！
+    function clearCityFilter() {
+        const input = document.getElementById('keywordSearch');
+        input.value = '';
+        runAdvancedFilter();
     }
 
     let allColumns = [];
@@ -519,7 +531,6 @@
         });
     }
 
-    // 🚀 URLコピー機能
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(() => {
             alert("URLをコピーしたぜッ！インスタのストーリーやプロフィールに貼り付けてくれ。");
