@@ -91,7 +91,6 @@
         .star-active { color: #f1c40f; }
         .star-off { color: #ddd; }
         
-        /* 🚀 擬音エフェクトを背面に配置する設定だッ！ */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
         .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; z-index: 0; }
 
@@ -110,7 +109,6 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); z-index: 0; }
 
-        /* 店名やボタンを擬音より前に出すための設定 */
         .review-header, .total-rating-label, .review-date, .content-wrapper, .btn-group, .sns-share-bar { position: relative; z-index: 1; }
 
         .sns-share-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; }
@@ -411,6 +409,7 @@
             <div class="column-card" style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
                 <div class="column-title"><a href="/column/${c.id}" style="color:var(--jojo-gold); text-decoration:none;">${escapeHTML(c.title)}</a></div>
                 <div class="column-content" style="font-size:0.9rem; color:#ddd; margin-top:5px;">${escapeHTML(c.content)}</div>
+                <div style="font-size:0.7rem; color:#666; margin-top:8px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</div>
             </div>
         `).join('');
     }
@@ -557,7 +556,7 @@
             list.innerHTML = comments.map(c => `
                 <div class="comment-item">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
-                        <span style="font-size: 0.7rem; color: #888;">🗓️ ${new Date(c.created_at).toLocaleDateString()}</span>
+                        <span style="font-size: 0.7rem; color: #888;">🗓️ ${new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
                         <button onclick="reportComment(${c.id})" style="background:none; border:none; color:#bbb; font-size:0.7rem; cursor:pointer;">🚩通報</button>
                     </div>
                     <div>${escapeHTML(c.content)}</div>
@@ -614,4 +613,4 @@
     document.addEventListener('DOMContentLoaded', loadReviews);
 </script>
 </body>
-</html>コラムの日付、間違ってるわ。これにして。 🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}  他はいじらない。
+</html>
