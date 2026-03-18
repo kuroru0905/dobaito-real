@@ -50,6 +50,12 @@ async function incrementPV() {
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
 
+// 🚀 Renderのヘルスチェックを確実に通すための明示的ルート
+app.get('/', (req, res) => {
+    incrementPV();
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/api/reviews', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -243,8 +249,8 @@ app.post('/api/reviews/:id/dismiss', async (req, res) => {
     } catch (err) { res.status(500).send("却下失敗"); }
 });
 
+// 🚀 万が一の予備ルーティング
 app.use((req, res, next) => {
-    if (!path.extname(req.path)) incrementPV();
     if (path.extname(req.path).length > 0) return next();
     res.sendFile(path.join(__dirname, 'index.html'));
 });
