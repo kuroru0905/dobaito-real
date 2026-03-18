@@ -101,6 +101,56 @@ app.get('/review/:id', async (req, res) => {
     } catch (err) { res.status(500).send("内部エラーだッ！"); }
 });
 
+// 🚀 管理者コラム（ひとりごと）を検索エンジンにインデックスさせるための専用ルートだッ！
+app.get('/column/:id', async (req, res) => {
+    try {
+        const { data: column, error } = await supabase
+            .from('columns')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !column) return res.status(404).send('その知恵（コラム）は存在しねえ…');
+
+        res.send(`
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${column.title} | 管理者KURORUのひとりごと（道バイト・リアル）</title>
+    <meta name="description" content="北海道のバイト事情を知り尽くす管理者KURORUによるコラム：${column.title}。現場のリアルな視点をお届けするぜッ！">
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 2rem; line-height: 1.8; }
+        .column-container { max-width: 800px; margin: auto; background: #222; padding: 2.5rem; border-radius: 12px; border: 3px solid #ffcf00; }
+        h1 { color: #ffcf00; font-size: 1.8rem; margin-top: 0; border-bottom: 2px solid #ffcf00; padding-bottom: 10px; }
+        .meta-info { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
+        .content { white-space: pre-wrap; font-size: 1.05rem; }
+        .profile-box { display: flex; align-items: center; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444; }
+        .profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #ffcf00; object-fit: cover; }
+        .back-btn { display: inline-block; margin-top: 30px; text-decoration: none; color: #ffcf00; font-weight: bold; border: 1px solid #ffcf00; padding: 8px 20px; border-radius: 50px; }
+    </style>
+</head>
+<body>
+    <div class="column-container">
+        <div class="meta-info">🗓️ 掲載日: ${new Date(column.created_at).toLocaleDateString()}</div>
+        <h1>${column.title}</h1>
+        <div class="content">${column.content}</div>
+        <div class="profile-box">
+            <img src="/profile.jpg" alt="管理者KURORU" class="profile-img" onerror="this.style.display='none'">
+            <div>
+                <strong>管理者：KURORU</strong><br>
+                <small>新ひだか町出身・BEATBOXER。現場のリアルを愛する男だッ！</small>
+            </div>
+        </div>
+        <a href="/" class="back-btn">← TOPへ戻って口コミを見る</a>
+    </div>
+</body>
+</html>
+        `);
+    } catch (err) { res.status(500).send("内部エラーだッ！"); }
+});
+
 // 🚀 Renderのヘルスチェックを確実に通すための明示的ルート
 app.get('/', (req, res) => {
     incrementPV();

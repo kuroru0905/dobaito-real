@@ -361,7 +361,9 @@
         list.innerHTML = displayColumns.map((c) => {
             return `
                 <div class="column-card">
-                    <div class="column-title">${escapeHTML(c.title)}</div>
+                    <div class="column-title">
+                        <a href="/column/${c.id}" style="color:var(--jojo-gold); text-decoration:none;">${escapeHTML(c.title)}</a>
+                    </div>
                     <div class="column-content">${escapeHTML(c.content)}</div>
                     <div style="font-size:0.7rem; color:#666; margin-top:8px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
                 </div>
