@@ -138,7 +138,7 @@
         .column-card { background: #222; border-bottom: 1px solid #444; padding: 1.5rem 0; }
         .column-card:last-child { border-bottom: none; }
         .column-title { color: var(--jojo-gold); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
-        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; overflow: hidden; transition: 0.3s; }
+        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; overflow: hidden; transition: 0.3s; margin: 0; }
         .column-content.collapsed { max-height: 100px; }
         .column-toggle-link { color: var(--jojo-gold); cursor: pointer; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-top: 10px; text-decoration: underline; }
         .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.3s; }
@@ -159,7 +159,7 @@
 <div class="container">
     <section class="column-section" id="columnSection" style="display:none;">
         <div class="column-header-flex">
-            <img src="profile.jpg" alt="管理者プロフィール" class="column-profile-img" onerror="this.style.display='none'">
+            <img src="profile.jpg" alt="管理者" class="column-profile-img" onerror="this.style.display='none'">
             <h2 style="margin:0; color:var(--jojo-gold);">📜 管理者KURORUのひとりごと</h2>
         </div>
         <div id="columnList"></div>
@@ -342,9 +342,7 @@
             return `
                 <div class="column-card">
                     <div class="column-title">${escapeHTML(c.title)}</div>
-                    <div id="col-body-${c.id}" class="column-content ${isLong ? 'collapsed' : ''}">
-                        ${escapeHTML(c.content)}
-                    </div>
+                    <div id="col-body-${c.id}" class="column-content ${isLong ? 'collapsed' : ''}">${escapeHTML(c.content)}</div>
                     ${isLong ? `<span class="column-toggle-link" onclick="toggleColumnText(${c.id})">...続きを読む</span>` : ''}
                     <div style="font-size:0.7rem; color:#666; margin-top:10px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
                 </div>
