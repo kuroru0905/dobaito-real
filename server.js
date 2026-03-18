@@ -15,6 +15,8 @@ const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Shake0905';
 const ADMIN_TOKEN = "MichiBaito_Secret_Session_Key_2026";
 
 const postHistory = new Map();
+// 🚀 ログイン失敗履歴を管理するスタンドだッ！
+const loginAttempts = new Map();
 
 const NG_WORDS = [
     "死ね", "シネ", "殺す", "ころす", "コロス", "殺意", "バカ", "ばか", "馬鹿", "アホ", "あほ", "阿呆", 
@@ -67,7 +69,6 @@ app.get('/review/:id', async (req, res) => {
 
         if (error || !review) return res.status(404).send('その記憶（投稿）は存在しねえ…');
 
-        // 💡 検索エンジン（Google）に店名とエリアを伝えるためのHTMLを生成するぜッ！
         res.send(`
 <!DOCTYPE html>
 <html lang="ja">
@@ -217,7 +218,6 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
-    // 🚀 1. reCAPTCHA トークンの検証だッ！
     const captchaResponse = req.body['g-recaptcha-response'];
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
 
@@ -240,7 +240,6 @@ app.post('/api/reviews', async (req, res) => {
         return res.status(500).send('検証エラーだッ！');
     }
 
-    // 🚀 2. 検証合格！ ここから通常の投稿処理だッ！
     const forwarded = req.headers['x-forwarded-for'];
     const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
     const now = Date.now();
@@ -354,11 +353,40 @@ app.post('/api/reviews/:id/report', async (req, res) => {
     } catch (err) { res.status(500).send("通報エラー"); }
 });
 
+// 🚀 ここがブルートフォース攻撃への「鉄壁の守り」だッ！
 app.post('/api/admin/login', (req, res) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
+    const now = Date.now();
+    
+    // 10分間ログインを制限する設定だッ！
+    const lockDuration = 10 * 60 * 1000; 
+    const maxAttempts = 5;
+
+    let attemptData = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+
+    // ロック中かチェックするぜ
+    if (attemptData.count >= maxAttempts && now - attemptData.lastAttempt < lockDuration) {
+        const remaining = Math.ceil((lockDuration - (now - attemptData.lastAttempt)) / 60000);
+        return res.status(403).send(`「“終わりのないのが終わり”」……ログイン制限中だ。あと ${remaining} 分待てッ！`);
+    }
+
     if (req.body.password === ADMIN_PASS) {
+        // 成功したらカウントをリセットしろッ！
+        loginAttempts.delete(ip);
         res.json({ token: ADMIN_TOKEN });
     } else {
-        res.sendStatus(401);
+        // 失敗したらカウントを刻めッ！
+        attemptData.count++;
+        attemptData.lastAttempt = now;
+        loginAttempts.set(ip, attemptData);
+        
+        const remainingAttempts = maxAttempts - attemptData.count;
+        if (remainingAttempts <= 0) {
+            res.status(401).send("再起不能（リタイア）だ。しばらくアクセスを禁ずるッ！");
+        } else {
+            res.status(401).send(`パスワードが違うぜ。あと ${remainingAttempts} 回でロックされる。覚悟しろッ！`);
+        }
     }
 });
 
