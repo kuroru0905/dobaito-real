@@ -133,6 +133,8 @@
 
         /* 🚀 コラムセクション用スタイル */
         .column-section { background: #1a1a1a; color: white; padding: 2rem; border-radius: 12px; margin-bottom: 3rem; border: 3px solid var(--jojo-gold); }
+        .column-header-flex { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid var(--jojo-gold); padding-bottom: 10px; }
+        .column-profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--jojo-gold); object-fit: cover; background: #333; }
         .column-card { background: #222; border-bottom: 1px solid #444; padding: 1.5rem 0; }
         .column-card:last-child { border-bottom: none; }
         .column-title { color: var(--jojo-gold); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
@@ -156,7 +158,10 @@
 
 <div class="container">
     <section class="column-section" id="columnSection" style="display:none;">
-        <h2 style="margin-top:0; color:var(--jojo-gold); border-bottom:2px solid var(--jojo-gold); padding-bottom:10px;">📜 管理者KURORUのひとりごと</h2>
+        <div class="column-header-flex">
+            <img src="profile.jpg" alt="管理者プロフィール" class="column-profile-img" onerror="this.style.display='none'">
+            <h2 style="margin:0; color:var(--jojo-gold);">📜 管理者KURORUのひとりごと</h2>
+        </div>
         <div id="columnList"></div>
         <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns()" style="display:none;">過去のコラムを読む</button>
     </section>
@@ -311,13 +316,11 @@
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 コラム取得 ＆ 精密な畳み込みロジックだッ！
     let allColumns = [];
     let showPastColumns = false;
 
     async function loadColumns() {
         const section = document.getElementById('columnSection');
-        const list = document.getElementById('columnList');
         const pastBtn = document.getElementById('loadOldColumnsBtn');
         try {
             const res = await fetch('/api/columns');
@@ -332,7 +335,6 @@
 
     function renderColumnList() {
         const list = document.getElementById('columnList');
-        // 最新1件だけ表示するか、全部表示するか
         const displayColumns = showPastColumns ? allColumns : [allColumns[0]];
         
         list.innerHTML = displayColumns.map((c, i) => {
@@ -372,7 +374,6 @@
         let filtered = allReviews.filter(r => {
             const matchArea = (currentArea === 'すべて' || r.area === currentArea);
             const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
-            
             let matchKeyword = true;
             if (keyword.length > 0) {
                 const shopText = (r.shop || "").toLowerCase();
@@ -391,7 +392,6 @@
         else if (sort === 'rating_high') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         else if (sort === 'rating_low') filtered.sort((a, b) => (a.rating || 0) - (b.rating || 0));
         else filtered.sort((a, b) => b.id - a.id);
-
         renderReviews(filtered);
     }
 
@@ -422,22 +422,15 @@
             const card = document.createElement('div');
             let statusClass = '';
             let jojoText = '';
-
             if (likes >= 100) { statusClass = 'ultra-rated'; jojoText = 'メメタァ！'; }
             else if (likes >= 50) { statusClass = 'ultra-rated'; jojoText = 'ズキュウウゥン！'; }
             else if (likes >= 30) { statusClass = 'ultra-rated'; jojoText = 'バァァァン！'; }
             else if (likes >= 10) { statusClass = 'high-rated'; jojoText = 'ゴゴゴゴゴ…'; }
-
-            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', {
-                year: 'numeric', month: '2-digit', day: '2-digit'
-            }) : '日付不明';
-
+            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '日付不明';
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
             const isLong = content.length > 100;
-
             card.className = `review-card ${statusClass}`;
             if (jojoText) card.setAttribute('data-jojo', jojoText);
-
             card.innerHTML = `
                 <div class="review-header">
                     <span class="shop-name">${shop}</span>
@@ -484,10 +477,7 @@
     async function loadComments(id) {
         const section = document.getElementById(`comment-section-${id}`);
         const list = document.getElementById(`comment-list-${id}`);
-        if (section.style.display === 'block') {
-            section.style.display = 'none';
-            return;
-        }
+        if (section.style.display === 'block') { section.style.display = 'none'; return; }
         try {
             const res = await fetch(`/api/reviews/${id}/comments`);
             const comments = await res.json();
@@ -529,10 +519,7 @@
 
     async function addReview() {
         const submitBtn = document.querySelector('.submit-btn');
-        const data = {
-            area: document.getElementById('postArea').value, city: document.getElementById('postCity').value, shop: document.getElementById('postShop').value.trim(),
-            content: document.getElementById('postContent').value.trim(), job_type: document.getElementById('postJobType').value, rating: parseInt(document.getElementById('postRating').value)
-        };
+        const data = { area: document.getElementById('postArea').value, city: document.getElementById('postCity').value, shop: document.getElementById('postShop').value.trim(), content: document.getElementById('postContent').value.trim(), job_type: document.getElementById('postJobType').value, rating: parseInt(document.getElementById('postRating').value) };
         if (!data.area || !data.city || !data.shop || !data.content || !data.job_type) return alert("全部埋めてくれ！");
         if (!confirm("この内容で現場のリアルを刻み込むか？")) return;
         try {
