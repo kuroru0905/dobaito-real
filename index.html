@@ -11,6 +11,8 @@
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7541386508630667" crossorigin="anonymous"></script>
 
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>道バイト・リアル | 北海道のアルバイト評判・口コミ・現場のリアルを暴露</title>
@@ -144,7 +146,7 @@
         .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; margin: 0; }
         .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 8px 15px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; font-size: 0.85rem; }
 
-        /* 🚀 個別ページリンク用の新スタイル（重なり回避） */
+        /* 🚀 個別ページリンク用のスタイル */
         .detail-link-container { display: flex; justify-content: flex-end; margin-top: 10px; }
         .detail-link { 
             background: #fff; color: var(--hokkaido-blue); text-decoration: none; 
@@ -152,7 +154,6 @@
             padding: 4px 12px; border-radius: 50px; transition: 0.2s;
         }
         .detail-link:hover { background: var(--hokkaido-blue); color: #fff; }
-        /* メメタァ！モードの時はボタンの色を調整 */
         .review-card.ultra-rated[data-jojo="メメタァ！"] .detail-link { 
             background: transparent; color: var(--jojo-gold); border-color: var(--jojo-gold); 
         }
@@ -240,6 +241,10 @@
         <div class="form-group">
             <label>投稿内容</label>
             <textarea id="postContent" rows="5" placeholder="まかない、店長の圧、除雪の辛さなど..."></textarea>
+        </div>
+
+        <div class="form-group" style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+            <div class="g-recaptcha" data-sitekey="6LeZqY4sAAAAAH31Irpfn7fH-kwBXxY-3BPjYEzk"></div>
         </div>
 
         <button class="submit-btn" onclick="addReview()">この現実を投稿する</button>
@@ -351,7 +356,6 @@
         } catch (e) { console.error("コラム読み込み失敗", e); }
     }
 
-    // 🚀 コラムセクションの開閉
     function toggleColumnBody() {
         const body = document.getElementById('columnBody');
         const previewText = document.getElementById('columnPreviewText');
@@ -544,16 +548,39 @@
     }
 
     async function addReview() {
+        // 🚀 reCAPTCHA の応答トークンを取得ッ！
+        const captchaResponse = grecaptcha.getResponse();
+        if (!captchaResponse) return alert("『私はロボットではありません』にチェックを入れてくれッ！");
+
         const submitBtn = document.querySelector('.submit-btn');
-        const data = { area: document.getElementById('postArea').value, city: document.getElementById('postCity').value, shop: document.getElementById('postShop').value.trim(), content: document.getElementById('postContent').value.trim(), job_type: document.getElementById('postJobType').value, rating: parseInt(document.getElementById('postRating').value) };
+        const data = { 
+            area: document.getElementById('postArea').value, 
+            city: document.getElementById('postCity').value, 
+            shop: document.getElementById('postShop').value.trim(), 
+            content: document.getElementById('postContent').value.trim(), 
+            job_type: document.getElementById('postJobType').value, 
+            rating: parseInt(document.getElementById('postRating').value),
+            // 🚀 トークンをサーバーに届けるぜッ！
+            'g-recaptcha-response': captchaResponse
+        };
+
         if (!data.area || !data.city || !data.shop || !data.content || !data.job_type) return alert("全部埋めてくれ！");
         if (!confirm("この内容で現場のリアルを刻み込むか？")) return;
         try {
             submitBtn.disabled = true; submitBtn.innerText = "刻み込み中...";
             const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             if (response.ok) { alert("投稿完了ッ！"); location.reload(); }
-            else { alert(await response.text()); submitBtn.disabled = false; submitBtn.innerText = "この現実を投稿する"; }
-        } catch (error) { alert("通信エラーだ！"); submitBtn.disabled = false; }
+            else { 
+                alert(await response.text()); 
+                submitBtn.disabled = false; 
+                submitBtn.innerText = "この現実を投稿する";
+                grecaptcha.reset();
+            }
+        } catch (error) { 
+            alert("通信エラーだ！"); 
+            submitBtn.disabled = false; 
+            grecaptcha.reset();
+        }
     }
 
     async function likeReview(id) {

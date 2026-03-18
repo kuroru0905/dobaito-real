@@ -217,6 +217,30 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
+    // 🚀 1. reCAPTCHA トークンの検証だッ！
+    const captchaResponse = req.body['g-recaptcha-response'];
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    if (!captchaResponse) {
+        return res.status(400).send('ロボットはお断りだぜッ！');
+    }
+
+    try {
+        const verifyRes = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${secretKey}&response=${captchaResponse}`
+        });
+        const verifyData = await verifyRes.json();
+
+        if (!verifyData.success) {
+            return res.status(400).send('チェックの有効期限が切れたか、不正なリクエストだッ！');
+        }
+    } catch (e) {
+        return res.status(500).send('検証エラーだッ！');
+    }
+
+    // 🚀 2. 検証合格！ ここから通常の投稿処理だッ！
     const forwarded = req.headers['x-forwarded-for'];
     const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
     const now = Date.now();
