@@ -4,6 +4,7 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 app.use(express.json());
+// 🚀 静的ファイルの公開範囲を明確にするぜッ！
 app.use(express.static(__dirname));
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -49,6 +50,11 @@ async function incrementPV() {
         }
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
+
+// 🚀 画像ファイルを確実に表示させるための専用ルートだッ！
+app.get('/profile.jpg', (req, res) => {
+    res.sendFile(path.join(__dirname, 'profile.jpg'));
+});
 
 // 🚀 Renderのヘルスチェックを確実に通すための明示的ルート
 app.get('/', (req, res) => {
