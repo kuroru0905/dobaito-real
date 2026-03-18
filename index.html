@@ -29,7 +29,6 @@
 
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         
-        /* 🚀 エリアランキング用スタイル */
         .ranking-panel { background: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid var(--jojo-gold); }
         .ranking-title { font-weight: bold; font-size: 1rem; color: #444; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .rank-tags { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -37,7 +36,6 @@
         .rank-tag:hover { border-color: var(--hokkaido-blue); background: #eef6ff; }
         .rank-tag span { color: #999; margin-left: 4px; font-size: 0.75rem; }
 
-        /* 🚀 クリアボタン用スタイル */
         .clear-filter-btn { background: #f0f0f0; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; color: #666; cursor: pointer; font-weight: normal; }
         .clear-filter-btn:hover { background: #e0e0e0; color: #333; }
 
@@ -93,11 +91,12 @@
         .star-active { color: #f1c40f; }
         .star-off { color: #ddd; }
         
+        /* 🚀 擬音エフェクトを背面に配置する設定だッ！ */
         .review-card.high-rated { border-left: 12px solid var(--jojo-purple); background: linear-gradient(135deg, #fff 0%, #f4e6ff 100%); }
-        .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; }
+        .review-card.high-rated::before { content: attr(data-jojo); position: absolute; bottom: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(75, 0, 130, 0.1); font-style: italic; z-index: 0; }
 
         .review-card.ultra-rated { border-left: 15px solid #000; background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); }
-        .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); z-index: 1; }
+        .review-card.ultra-rated::after { content: attr(data-jojo); position: absolute; top: 10px; right: 10px; font-size: 1.8rem; font-weight: 900; color: #000; text-shadow: 2px 2px var(--jojo-gold); font-style: italic; transform: rotate(10deg); z-index: 0; opacity: 0.6; pointer-events: none; }
 
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"] { border-left-color: var(--jojo-pink); background: linear-gradient(135deg, #fff 0%, #fff0f5 100%); }
         .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { color: var(--jojo-pink); text-shadow: 2px 2px #fff; }
@@ -109,7 +108,10 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .area-tag { background: rgba(255, 255, 255, 0.2); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .city-tag { background: rgba(0, 86, 179, 0.4); color: #fff; }
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
-        .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
+        .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); z-index: 0; }
+
+        /* 店名やボタンを擬音より前に出すための設定 */
+        .review-header, .total-rating-label, .review-date, .content-wrapper, .btn-group, .sns-share-bar { position: relative; z-index: 1; }
 
         .sns-share-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; }
         .share-btn { border: none; padding: 6px 12px; border-radius: 6px; color: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 5px; }
@@ -368,7 +370,6 @@
         input.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 🚀 フィルター解除機能だッ！
     function clearCityFilter() {
         const input = document.getElementById('keywordSearch');
         input.value = '';
