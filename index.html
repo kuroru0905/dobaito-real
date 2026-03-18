@@ -132,17 +132,17 @@
         @keyframes punch { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         /* 🚀 コラムセクション用スタイル */
-        .column-section { background: #1a1a1a; color: white; padding: 2rem; border-radius: 12px; margin-bottom: 3rem; border: 3px solid var(--jojo-gold); }
-        .column-header-flex { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid var(--jojo-gold); padding-bottom: 10px; }
-        .column-profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--jojo-gold); object-fit: cover; background: #333; }
-        .column-card { background: #222; border-bottom: 1px solid #444; padding: 1.5rem 0; }
+        .column-section { background: #1a1a1a; color: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 3rem; border: 3px solid var(--jojo-gold); cursor: pointer; transition: 0.3s; }
+        .column-section:hover { transform: scale(1.01); box-shadow: 0 0 15px rgba(255, 207, 0, 0.3); }
+        .column-header-flex { display: flex; align-items: center; gap: 15px; }
+        .column-profile-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--jojo-gold); object-fit: cover; background: #333; }
+        .column-body { display: none; margin-top: 15px; border-top: 1px solid #444; padding-top: 15px; animation: slideDown 0.3s ease; }
+        .column-body.active { display: block; }
+        .column-card { background: #222; border-bottom: 1px dashed #444; padding: 1rem 0; }
         .column-card:last-child { border-bottom: none; }
-        .column-title { color: var(--jojo-gold); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
-        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; overflow: hidden; transition: 0.3s; margin: 0; }
-        .column-content.collapsed { max-height: 100px; }
-        .column-toggle-link { color: var(--jojo-gold); cursor: pointer; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-top: 10px; text-decoration: underline; }
-        .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.3s; }
-        .old-columns-btn:hover { background: #fff; }
+        .column-title { color: var(--jojo-gold); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; margin: 0; }
+        .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 8px 15px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; font-size: 0.85rem; }
 
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
@@ -157,13 +157,18 @@
 </header>
 
 <div class="container">
-    <section class="column-section" id="columnSection" style="display:none;">
+    <section class="column-section" id="columnSection" style="display:none;" onclick="toggleColumnBody()">
         <div class="column-header-flex">
             <img src="profile.jpg" alt="管理者" class="column-profile-img" onerror="this.style.display='none'">
-            <h2 style="margin:0; color:var(--jojo-gold);">管理者KURORUのひとりごと</h2>
+            <div style="flex-grow: 1;">
+                <h2 style="margin:0; color:var(--jojo-gold); font-size: 1.1rem;">管理者KURORUのひとりごと</h2>
+                <small style="color: #888;" id="columnPreviewText">タップで最新のコラムを読む ▽</small>
+            </div>
         </div>
-        <div id="columnList"></div>
-        <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns()" style="display:none;">過去のコラムを読む</button>
+        <div id="columnBody" class="column-body" onclick="event.stopPropagation()">
+            <div id="columnList"></div>
+            <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns(); event.stopPropagation()" style="display:none;">過去のコラムを読む</button>
+        </div>
     </section>
 
     <button class="toggle-post-btn" id="togglePostBtn" onclick="togglePostForm()">📢 現場のリアルを投稿する</button>
@@ -333,28 +338,31 @@
         } catch (e) { console.error("コラム読み込み失敗", e); }
     }
 
+    // 🚀 コラムセクションの開閉
+    function toggleColumnBody() {
+        const body = document.getElementById('columnBody');
+        const previewText = document.getElementById('columnPreviewText');
+        body.classList.toggle('active');
+        if (body.classList.contains('active')) {
+            previewText.innerText = "タップで閉じる △";
+        } else {
+            previewText.innerText = "タップで最新のコラムを読む ▽";
+        }
+    }
+
     function renderColumnList() {
         const list = document.getElementById('columnList');
         const displayColumns = showPastColumns ? allColumns : [allColumns[0]];
         
-        list.innerHTML = displayColumns.map((c, i) => {
-            const isLong = c.content.length > 150;
+        list.innerHTML = displayColumns.map((c) => {
             return `
                 <div class="column-card">
                     <div class="column-title">${escapeHTML(c.title)}</div>
-                    <div id="col-body-${c.id}" class="column-content ${isLong ? 'collapsed' : ''}">${escapeHTML(c.content)}</div>
-                    ${isLong ? `<span class="column-toggle-link" onclick="toggleColumnText(${c.id})">...続きを読む</span>` : ''}
-                    <div style="font-size:0.7rem; color:#666; margin-top:10px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
+                    <div class="column-content">${escapeHTML(c.content)}</div>
+                    <div style="font-size:0.7rem; color:#666; margin-top:8px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
                 </div>
             `;
         }).join('');
-    }
-
-    function toggleColumnText(id) {
-        const el = document.getElementById(`col-body-${id}`);
-        const link = event.target;
-        el.classList.toggle('collapsed');
-        link.innerText = el.classList.contains('collapsed') ? "...続きを読む" : "閉じる";
     }
 
     function togglePastColumns() {
