@@ -144,6 +144,10 @@
         .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; margin: 0; }
         .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 8px 15px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; font-size: 0.85rem; }
 
+        /* 🚀 個別ページリンク用のスタイル */
+        .detail-link { font-size: 0.85rem; color: var(--hokkaido-blue); text-decoration: none; font-weight: bold; margin-left: auto; border: 1px solid var(--hokkaido-blue); padding: 2px 8px; border-radius: 4px; transition: 0.2s; }
+        .detail-link:hover { background: var(--hokkaido-blue); color: white; }
+
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
     </style>
@@ -438,11 +442,12 @@
             card.className = `review-card ${statusClass}`;
             if (jojoText) card.setAttribute('data-jojo', jojoText);
             card.innerHTML = `
-                <div class="review-header">
+                <div class="review-header" style="display:flex; flex-wrap:wrap; align-items:center;">
                     <span class="shop-name">${shop}</span>
                     <span class="area-tag">${escapeHTML(review.area)}</span>
                     <span class="city-tag">${escapeHTML(review.city || '不明')}</span>
                     <span class="job-tag">${escapeHTML(review.job_type || '無指定')}</span>
+                    <a href="/review/${review.id}" class="detail-link">詳細を見る ≫</a>
                 </div>
                 <div class="total-rating-label" style="margin: 8px 0; font-weight: bold; color: #444;">総合評価: ${getStarsHtml(review.rating || 3)}</div>
                 <div class="review-date" style="font-size: 0.8rem; color: #999;">🗓️ ${dateStr}</div>
