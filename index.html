@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>道バイト・リアル | 北海道のアルバイト評判・口コミ・現場のリアルを暴露</title>
     <style>
-        :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; --jojo-gold: #ffcf00; --jojo-pink: #ff1493; }
+        :root { --hokkaido-blue: #0056b3; --snow-white: #f0f4f8; --warning-red: #ff4d4d; --jojo-purple: #4b0082; --jojo-gold: #ffcf00; --jojo-pink: #ff1493; --x-black: #000; --insta-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         body { font-family: sans-serif; margin: 0; background-color: var(--snow-white); color: #333; }
 
         header { 
@@ -29,6 +29,14 @@
 
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         
+        /* 🚀 エリアランキング用スタイル */
+        .ranking-panel { background: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid var(--jojo-gold); }
+        .ranking-title { font-weight: bold; font-size: 1rem; color: #444; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .rank-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rank-tag { background: #fff; border: 1px solid #ddd; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--hokkaido-blue); }
+        .rank-tag:hover { border-color: var(--hokkaido-blue); background: #eef6ff; }
+        .rank-tag span { color: #999; margin-left: 4px; font-size: 0.75rem; }
+
         .post-section { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         .post-section.active { display: block; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -99,54 +107,28 @@
         .review-card.ultra-rated[data-jojo="メメタァ！"] .like-btn { border-color: var(--jojo-gold); color: var(--jojo-gold); }
         .review-card.ultra-rated[data-jojo="メメタァ！"]::after { color: rgba(255, 255, 255, 0.2); text-shadow: none; font-size: 2.2rem; top: 50%; transform: translate(0, -50%) rotate(-5deg); }
 
-        /* 🚀 続きを読む ＆ 返信欄の追加スタイル */
+        /* 🚀 SNSシェアボタン用スタイル */
+        .sns-share-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; }
+        .share-btn { border: none; padding: 6px 12px; border-radius: 6px; color: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        .btn-x { background-color: var(--x-black); }
+        .btn-insta { background: var(--insta-gradient); }
+
         .content-wrapper { position: relative; line-height: 1.7; transition: 0.3s; }
         .content-wrapper.collapsed { max-height: 4.5em; overflow: hidden; }
         .read-more-link { color: var(--hokkaido-blue); cursor: pointer; font-weight: bold; font-size: 0.9rem; display: block; margin-top: 5px; }
         
         .comment-section { margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px; }
-        .comment-list { font-size: 0.85rem; color: #555; margin-bottom: 10px; }
         .comment-item { background: #f0f4f8; padding: 8px 12px; border-radius: 6px; margin-bottom: 5px; border-left: 3px solid #ccc; }
         .comment-toggle-btn { background: none; border: none; color: var(--hokkaido-blue); font-size: 0.85rem; cursor: pointer; padding: 0; font-weight: bold; }
         .comment-input-area { display: flex; gap: 8px; margin-top: 10px; }
         .comment-input-area input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; }
         .comment-btn { background: var(--hokkaido-blue); color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
 
-        @media screen and (max-width: 768px) {
-            .review-card.ultra-rated::after { font-size: 1.4rem; top: 5px; right: 5px; transform: rotate(15deg); }
-            .review-card.ultra-rated[data-jojo="ズキュウウゥン！"]::after { font-size: 1.5rem; top: 2px; right: 2px; transform: rotate(-10deg); }
-            .review-card.ultra-rated[data-jojo="メメタァ！"]::after { font-size: 1.8rem; }
-        }
-
-        .ad-card { background: #fffbe6; border: 2px dashed #ccc; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; color: #666; font-size: 0.9rem; position: relative; }
-        .ad-label { position: absolute; top: -10px; left: 20px; background: #fff; padding: 0 10px; font-weight: bold; font-size: 0.75rem; color: #999; }
-
         .shop-name { font-weight: bold; color: var(--hokkaido-blue); font-size: 1.2rem; }
-        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 8px; }
-        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; }
-        .job-tag { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; margin-left: 5px; border: 1px solid #ffcc80; }
+        .area-tag { background: #eee; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; }
+        .city-tag { background: #e3f2fd; color: #1976d2; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; }
+        .job-tag { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; border: 1px solid #ffcc80; }
         
-        .like-btn { 
-            background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
-            padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
-        }
-        .like-btn.voted { background-color: var(--warning-red); border-color: var(--warning-red); color: white; animation: punch 0.3s ease; }
-        @keyframes punch { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        /* 🚀 コラムセクション用スタイル */
-        .column-section { background: #1a1a1a; color: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 3rem; border: 3px solid var(--jojo-gold); cursor: pointer; transition: 0.3s; }
-        .column-section:hover { transform: scale(1.01); box-shadow: 0 0 15px rgba(255, 207, 0, 0.3); }
-        .column-header-flex { display: flex; align-items: center; gap: 15px; }
-        .column-profile-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--jojo-gold); object-fit: cover; background: #333; }
-        .column-body { display: none; margin-top: 15px; border-top: 1px solid #444; padding-top: 15px; animation: slideDown 0.3s ease; }
-        .column-body.active { display: block; }
-        .column-card { background: #222; border-bottom: 1px dashed #444; padding: 1rem 0; }
-        .column-card:last-child { border-bottom: none; }
-        .column-title { color: var(--jojo-gold); font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
-        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; margin: 0; }
-        .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 8px 15px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; font-size: 0.85rem; }
-
-        /* 🚀 個別ページリンク用のスタイル */
         .detail-link-container { display: flex; justify-content: flex-end; margin-top: 10px; }
         .detail-link { 
             background: #fff; color: var(--hokkaido-blue); text-decoration: none; 
@@ -154,9 +136,18 @@
             padding: 4px 12px; border-radius: 50px; transition: 0.2s;
         }
         .detail-link:hover { background: var(--hokkaido-blue); color: #fff; }
-        .review-card.ultra-rated[data-jojo="メメタァ！"] .detail-link { 
-            background: transparent; color: var(--jojo-gold); border-color: var(--jojo-gold); 
+
+        .like-btn { 
+            background: none; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
+            padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
         }
+        .like-btn.voted { background-color: var(--warning-red); border-color: var(--warning-red); color: white; animation: punch 0.3s ease; }
+        @keyframes punch { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        .column-section { background: #1a1a1a; color: white; padding: 1.2rem; border-radius: 12px; margin-bottom: 3rem; border: 3px solid var(--jojo-gold); cursor: pointer; transition: 0.3s; }
+        .column-body { display: none; margin-top: 15px; border-top: 1px solid #444; padding-top: 15px; animation: slideDown 0.3s ease; }
+        .column-body.active { display: block; }
+        .column-title { color: var(--jojo-gold); font-size: 1.1rem; font-weight: bold; }
 
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
@@ -171,9 +162,14 @@
 </header>
 
 <div class="container">
+    <div class="ranking-panel" id="rankingPanel" style="display:none;">
+        <div class="ranking-title">🔥 注目の熱い市区町村</div>
+        <div class="rank-tags" id="rankTags"></div>
+    </div>
+
     <section class="column-section" id="columnSection" style="display:none;" onclick="toggleColumnBody()">
-        <div class="column-header-flex">
-            <img src="profile.jpg" alt="管理者" class="column-profile-img" onerror="this.style.display='none'">
+        <div class="column-header-flex" style="display:flex; align-items:center; gap:15px;">
+            <img src="profile.jpg" alt="管理者" class="column-profile-img" style="width:50px; height:50px; border-radius:50%; border:2px solid var(--jojo-gold); object-fit:cover;" onerror="this.style.display='none'">
             <div style="flex-grow: 1;">
                 <h2 style="margin:0; color:var(--jojo-gold); font-size: 1.1rem;">管理者　KURORUのひとりごと</h2>
                 <small style="color: #888;" id="columnPreviewText">タップで最新のコラムを読む ▽</small>
@@ -181,7 +177,7 @@
         </div>
         <div id="columnBody" class="column-body" onclick="event.stopPropagation()">
             <div id="columnList"></div>
-            <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns(); event.stopPropagation()" style="display:none;">過去のコラムを読む</button>
+            <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns(); event.stopPropagation()" style="background:var(--jojo-gold); color:black; border:none; padding:8px 15px; border-radius:50px; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; display:none;">過去のコラムを読む</button>
         </div>
     </section>
 
@@ -334,9 +330,37 @@
         try {
             const response = await fetch('/api/reviews');
             allReviews = await response.json();
+            updateRanking(); // 🚀 ランキング更新ッ！
             runAdvancedFilter();
             loadColumns();
         } catch (error) { console.error(error); }
+    }
+
+    // 🚀 エリアランキング生成ロジック
+    function updateRanking() {
+        const panel = document.getElementById('rankingPanel');
+        const tags = document.getElementById('rankTags');
+        const counts = allReviews.reduce((acc, r) => {
+            if(r.city) acc[r.city] = (acc[r.city] || 0) + 1;
+            return acc;
+        }, {});
+
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        if (sorted.length > 0) {
+            panel.style.display = 'block';
+            tags.innerHTML = sorted.map(([city, count]) => `
+                <div class="rank-tag" onclick="quickSearchCity('${city}')">
+                    #${city} <span>(${count})</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    function quickSearchCity(city) {
+        const input = document.getElementById('keywordSearch');
+        input.value = city;
+        runAdvancedFilter();
+        input.scrollIntoView({ behavior: 'smooth' });
     }
 
     let allColumns = [];
@@ -370,18 +394,12 @@
     function renderColumnList() {
         const list = document.getElementById('columnList');
         const displayColumns = showPastColumns ? allColumns : [allColumns[0]];
-        
-        list.innerHTML = displayColumns.map((c) => {
-            return `
-                <div class="column-card">
-                    <div class="column-title">
-                        <a href="/column/${c.id}" style="color:var(--jojo-gold); text-decoration:none;">${escapeHTML(c.title)}</a>
-                    </div>
-                    <div class="column-content">${escapeHTML(c.content)}</div>
-                    <div style="font-size:0.7rem; color:#666; margin-top:8px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
-                </div>
-            `;
-        }).join('');
+        list.innerHTML = displayColumns.map((c) => `
+            <div class="column-card" style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div class="column-title"><a href="/column/${c.id}" style="color:var(--jojo-gold); text-decoration:none;">${escapeHTML(c.title)}</a></div>
+                <div class="column-content" style="font-size:0.9rem; color:#ddd; margin-top:5px;">${escapeHTML(c.content)}</div>
+            </div>
+        `).join('');
     }
 
     function togglePastColumns() {
@@ -401,14 +419,8 @@
             const matchJob = (job === 'すべて' || (r.job_type || '無指定') === job);
             let matchKeyword = true;
             if (keyword.length > 0) {
-                const shopText = (r.shop || "").toLowerCase();
-                const contentText = (r.content || "").toLowerCase();
-                const combinedText = shopText + contentText;
-                const keywordChars = [...new Set(keyword.split(''))];
-                let hitCount = 0;
-                for (let char of keywordChars) { if (combinedText.includes(char)) hitCount++; }
-                const threshold = Math.min(3, keywordChars.length);
-                matchKeyword = (hitCount >= threshold);
+                const combinedText = (r.shop + r.content + (r.city || "")).toLowerCase();
+                matchKeyword = keyword.split(/\s+/).every(word => combinedText.includes(word));
             }
             return matchArea && matchJob && matchKeyword;
         });
@@ -451,9 +463,12 @@
             else if (likes >= 50) { statusClass = 'ultra-rated'; jojoText = 'ズキュウウゥン！'; }
             else if (likes >= 30) { statusClass = 'ultra-rated'; jojoText = 'バァァァン！'; }
             else if (likes >= 10) { statusClass = 'high-rated'; jojoText = 'ゴゴゴゴゴ…'; }
-            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '日付不明';
+            const dateStr = review.created_at ? new Date(review.created_at).toLocaleDateString('ja-JP') : '日付不明';
             const votedClass = votedIds.includes(review.id) ? 'voted' : '';
             const isLong = content.length > 100;
+            const shareUrl = `${window.location.origin}/review/${review.id}`;
+            const shareText = `【${shop}】のバイト評判・口コミ（${review.city}） | 道バイト・リアル`;
+
             card.className = `review-card ${statusClass}`;
             if (jojoText) card.setAttribute('data-jojo', jojoText);
             card.innerHTML = `
@@ -474,11 +489,18 @@
                     <p class="review-content" style="margin-top: 15px; line-height: 1.7; white-space: pre-wrap;">${content}</p>
                 </div>
                 ${isLong ? `<span class="read-more-link" onclick="toggleContent(${review.id})">...続きを読む</span>` : ''}
+                
                 <div class="btn-group" style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                     <button id="like-${review.id}" class="like-btn ${votedClass}" onclick="likeReview(${review.id})">良道！ (${likes})</button>
                     <button class="comment-toggle-btn" onclick="loadComments(${review.id})">💬 返信 (${commentCount})</button>
-                    <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.8rem; cursor:pointer;">🚩 削除依頼</button>
                 </div>
+
+                <div class="sns-share-bar">
+                    <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}" target="_blank" class="share-btn btn-x">Xでシェア</a>
+                    <button onclick="copyToClipboard('${shareUrl}')" class="share-btn btn-insta">URLコピー (インスタ用)</button>
+                    <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.7rem; cursor:pointer; margin-left:auto;">🚩 削除依頼</button>
+                </div>
+
                 <div id="comment-section-${review.id}" class="comment-section" style="display:none;">
                     <div id="comment-list-${review.id}" class="comment-list"></div>
                     <div class="comment-input-area">
@@ -497,6 +519,15 @@
         });
     }
 
+    // 🚀 URLコピー機能
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("URLをコピーしたぜッ！インスタのストーリーやプロフィールに貼り付けてくれ。");
+        }).catch(err => {
+            console.error('コピー失敗だ…', err);
+        });
+    }
+
     function toggleContent(id) {
         const wrapper = document.getElementById(`content-${id}`);
         const link = event.target;
@@ -511,29 +542,17 @@
         try {
             const res = await fetch(`/api/reviews/${id}/comments`);
             const comments = await res.json();
-            list.innerHTML = comments.map(c => {
-                const date = new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                return `
-                    <div class="comment-item">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
-                            <span style="font-size: 0.7rem; color: #888;">🗓️ ${date}</span>
-                            <button onclick="reportComment(${c.id})" style="background:none; border:none; color:#bbb; font-size:0.7rem; cursor:pointer;">🚩通報</button>
-                        </div>
-                        <div>${escapeHTML(c.content)}</div>
+            list.innerHTML = comments.map(c => `
+                <div class="comment-item">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+                        <span style="font-size: 0.7rem; color: #888;">🗓️ ${new Date(c.created_at).toLocaleDateString()}</span>
+                        <button onclick="reportComment(${c.id})" style="background:none; border:none; color:#bbb; font-size:0.7rem; cursor:pointer;">🚩通報</button>
                     </div>
-                `;
-            }).join('');
+                    <div>${escapeHTML(c.content)}</div>
+                </div>
+            `).join('');
             section.style.display = 'block';
         } catch (e) { alert("返信の読み込みに失敗"); }
-    }
-
-    async function reportComment(id) {
-        const reason = prompt("この返信を通報する理由を入力しろッ！");
-        if (!reason) return;
-        try {
-            const res = await fetch(`/api/comments/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) });
-            if (res.ok) alert("管理者に報告したぜ。");
-        } catch (e) { alert("通報失敗だ。"); }
     }
 
     async function postComment(id) {
@@ -548,39 +567,18 @@
     }
 
     async function addReview() {
-        // 🚀 reCAPTCHA の応答トークンを取得ッ！
         const captchaResponse = grecaptcha.getResponse();
         if (!captchaResponse) return alert("『私はロボットではありません』にチェックを入れてくれッ！");
-
         const submitBtn = document.querySelector('.submit-btn');
-        const data = { 
-            area: document.getElementById('postArea').value, 
-            city: document.getElementById('postCity').value, 
-            shop: document.getElementById('postShop').value.trim(), 
-            content: document.getElementById('postContent').value.trim(), 
-            job_type: document.getElementById('postJobType').value, 
-            rating: parseInt(document.getElementById('postRating').value),
-            // 🚀 トークンをサーバーに届けるぜッ！
-            'g-recaptcha-response': captchaResponse
-        };
-
+        const data = { area: document.getElementById('postArea').value, city: document.getElementById('postCity').value, shop: document.getElementById('postShop').value.trim(), content: document.getElementById('postContent').value.trim(), job_type: document.getElementById('postJobType').value, rating: parseInt(document.getElementById('postRating').value), 'g-recaptcha-response': captchaResponse };
         if (!data.area || !data.city || !data.shop || !data.content || !data.job_type) return alert("全部埋めてくれ！");
         if (!confirm("この内容で現場のリアルを刻み込むか？")) return;
         try {
             submitBtn.disabled = true; submitBtn.innerText = "刻み込み中...";
             const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             if (response.ok) { alert("投稿完了ッ！"); location.reload(); }
-            else { 
-                alert(await response.text()); 
-                submitBtn.disabled = false; 
-                submitBtn.innerText = "この現実を投稿する";
-                grecaptcha.reset();
-            }
-        } catch (error) { 
-            alert("通信エラーだ！"); 
-            submitBtn.disabled = false; 
-            grecaptcha.reset();
-        }
+            else { alert(await response.text()); submitBtn.disabled = false; submitBtn.innerText = "この現実を投稿する"; grecaptcha.reset(); }
+        } catch (error) { alert("通信エラーだ！"); submitBtn.disabled = false; grecaptcha.reset(); }
     }
 
     async function likeReview(id) {
