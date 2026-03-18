@@ -136,7 +136,11 @@
         .column-card { background: #222; border-bottom: 1px solid #444; padding: 1.5rem 0; }
         .column-card:last-child { border-bottom: none; }
         .column-title { color: var(--jojo-gold); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
-        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; }
+        .column-content { font-size: 0.95rem; line-height: 1.8; color: #ddd; white-space: pre-wrap; overflow: hidden; transition: 0.3s; }
+        .column-content.collapsed { max-height: 100px; }
+        .column-toggle-link { color: var(--jojo-gold); cursor: pointer; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-top: 10px; text-decoration: underline; }
+        .old-columns-btn { background: var(--jojo-gold); color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.3s; }
+        .old-columns-btn:hover { background: #fff; }
 
         footer { text-align: center; padding: 3rem; color: #999; font-size: 0.9rem; border-top: 1px solid #ddd; margin-top: 3rem; }
         footer a { color: #0056b3; text-decoration: none; margin: 0 10px; }
@@ -152,8 +156,9 @@
 
 <div class="container">
     <section class="column-section" id="columnSection" style="display:none;">
-        <h2 style="margin-top:0; color:var(--jojo-gold); border-bottom:2px solid var(--jojo-gold); padding-bottom:10px;">📜 管理者からの知恵袋</h2>
+        <h2 style="margin-top:0; color:var(--jojo-gold); border-bottom:2px solid var(--jojo-gold); padding-bottom:10px;">📜 管理者KURORUのひとりごと</h2>
         <div id="columnList"></div>
+        <button id="loadOldColumnsBtn" class="old-columns-btn" onclick="togglePastColumns()" style="display:none;">過去のコラムを読む</button>
     </section>
 
     <button class="toggle-post-btn" id="togglePostBtn" onclick="togglePostForm()">📢 現場のリアルを投稿する</button>
@@ -302,28 +307,61 @@
             const response = await fetch('/api/reviews');
             allReviews = await response.json();
             runAdvancedFilter();
-            loadColumns(); // 🚀 コラムも一緒に読み込むぜッ！
+            loadColumns();
         } catch (error) { console.error(error); }
     }
 
-    // 🚀 コラム取得 ＆ 描画ロジックだッ！
+    // 🚀 コラム取得 ＆ 精密な畳み込みロジックだッ！
+    let allColumns = [];
+    let showPastColumns = false;
+
     async function loadColumns() {
         const section = document.getElementById('columnSection');
         const list = document.getElementById('columnList');
+        const pastBtn = document.getElementById('loadOldColumnsBtn');
         try {
             const res = await fetch('/api/columns');
-            const columns = await res.json();
-            if (columns.length > 0) {
+            allColumns = await res.json();
+            if (allColumns.length > 0) {
                 section.style.display = 'block';
-                list.innerHTML = columns.map(c => `
-                    <div class="column-card">
-                        <div class="column-title">${escapeHTML(c.title)}</div>
-                        <div class="column-content">${escapeHTML(c.content)}</div>
-                        <div style="font-size:0.7rem; color:#666; margin-top:10px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
-                    </div>
-                `).join('');
+                renderColumnList();
+                if (allColumns.length > 1) pastBtn.style.display = 'block';
             }
         } catch (e) { console.error("コラム読み込み失敗", e); }
+    }
+
+    function renderColumnList() {
+        const list = document.getElementById('columnList');
+        // 最新1件だけ表示するか、全部表示するか
+        const displayColumns = showPastColumns ? allColumns : [allColumns[0]];
+        
+        list.innerHTML = displayColumns.map((c, i) => {
+            const isLong = c.content.length > 150;
+            return `
+                <div class="column-card">
+                    <div class="column-title">${escapeHTML(c.title)}</div>
+                    <div id="col-body-${c.id}" class="column-content ${isLong ? 'collapsed' : ''}">
+                        ${escapeHTML(c.content)}
+                    </div>
+                    ${isLong ? `<span class="column-toggle-link" onclick="toggleColumnText(${c.id})">...続きを読む</span>` : ''}
+                    <div style="font-size:0.7rem; color:#666; margin-top:10px;">🗓️ 掲載日: ${new Date(c.created_at).toLocaleDateString()}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleColumnText(id) {
+        const el = document.getElementById(`col-body-${id}`);
+        const link = event.target;
+        el.classList.toggle('collapsed');
+        link.innerText = el.classList.contains('collapsed') ? "...続きを読む" : "閉じる";
+    }
+
+    function togglePastColumns() {
+        showPastColumns = !showPastColumns;
+        const btn = document.getElementById('loadOldColumnsBtn');
+        btn.innerText = showPastColumns ? "過去のコラムを閉じる" : "過去のコラムを読む";
+        renderColumnList();
     }
 
     function runAdvancedFilter() {

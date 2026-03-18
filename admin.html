@@ -114,7 +114,7 @@
         const title = document.getElementById('colTitle').value.trim();
         const content = document.getElementById('colContent').value.trim();
         if (!title || !content) return alert("タイトルと内容を埋めろッ！");
-        if (!confirm("この知恵袋を公開してもいいか？")) return;
+        if (!confirm("このひとりごとを公開してもいいか？")) return;
 
         const res = await fetch('/api/admin/columns', {
             method: 'POST',
