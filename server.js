@@ -56,6 +56,51 @@ app.get('/profile.jpg', (req, res) => {
     res.sendFile(path.join(__dirname, 'profile.jpg'));
 });
 
+// 🚀 特定の投稿を検索エンジンにインデックスさせるための専用ページルートだッ！
+app.get('/review/:id', async (req, res) => {
+    try {
+        const { data: review, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !review) return res.status(404).send('その記憶（投稿）は存在しねえ…');
+
+        // 💡 検索エンジン（Google）に店名とエリアを伝えるためのHTMLを生成するぜッ！
+        res.send(`
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【${review.shop}】のバイト評判・口コミ（${review.city}） | 道バイト・リアル</title>
+    <meta name="description" content="${review.area}${review.city}にある${review.shop}のバイト現場のリアルな口コミ。総合評価：星${review.rating}個ッ！">
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; color: #333; padding: 2rem; line-height: 1.6; }
+        .card { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 12px; border-left: 10px solid #0056b3; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; font-size: 1.5rem; margin-top: 0; }
+        .tag { display: inline-block; background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; }
+        .content { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; white-space: pre-wrap; font-weight: bold; }
+        .back-btn { display: block; text-align: center; text-decoration: none; color: white; background: #0056b3; padding: 10px; border-radius: 50px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div style="margin-bottom:10px;">
+            <span class="tag">${review.area}</span><span class="tag">${review.city}</span><span class="tag">${review.job_type}</span>
+        </div>
+        <h1>${review.shop} のリアル</h1>
+        <div style="color: #f1c40f; font-size: 1.2rem;">評価: ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+        <div class="content">${review.content}</div>
+        <a href="/" class="back-btn">← 他の現場のリアルも見に行く</a>
+    </div>
+</body>
+</html>
+        `);
+    } catch (err) { res.status(500).send("内部エラーだッ！"); }
+});
+
 // 🚀 Renderのヘルスチェックを確実に通すための明示的ルート
 app.get('/', (req, res) => {
     incrementPV();
