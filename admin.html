@@ -14,7 +14,6 @@
         .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #feb2b2; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: #1a1a1a; color: #ffcf00; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px solid #ffcf00; box-shadow: 0 4px 15px rgba(255, 207, 0, 0.2); }
-        .stat-val { font-size: 2.5rem; font-weight: 900; margin: 10px 0; }
         h2 { border-left: 8px solid var(--jojo-purple); padding-left: 15px; margin-top: 40px; color: var(--jojo-purple); }
         .tag-date { font-size: 0.8rem; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; }
         .inner-comment-list { margin-top: 15px; padding-left: 20px; border-left: 3px solid #ddd; }
@@ -23,7 +22,6 @@
         .column-form input, .column-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .column-btn { background: var(--jojo-purple); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        /* 🚀 検索パネル用のスタイルだッ！ */
         .search-panel { background: #eee; padding: 1rem; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .search-panel input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
         .search-panel label { font-weight: bold; font-size: 0.9rem; }
@@ -74,14 +72,10 @@
         
         content.innerHTML = `
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div>現在の総戦闘力 (総PV数)</div>
-                    <div class="stat-val">${statsRes.pv.toLocaleString()}</div>
-                </div>
-                <div class="stat-card" style="border-color: #4b0082; color: #fff;">
+                <div class="stat-card" style="border-color: #4b0082; color: #fff; width: 100%;">
                     <div>エリア別投稿分布</div>
-                    <div style="font-size: 0.8rem; margin-top:10px; text-align:left;">
-                        ${Object.entries(statsRes.areas).map(([area, count]) => `<div>・${area}: ${count}件</div>`).join('')}
+                    <div style="font-size: 0.9rem; margin-top:10px; text-align:center; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+                        ${Object.entries(statsRes.areas).map(([area, count]) => `<span><b>${area}</b>: ${count}件</span>`).join('')}
                     </div>
                 </div>
             </div>
@@ -124,7 +118,6 @@
         loadAdminColumns(); 
     }
 
-    // 🚀 検索リセット機能
     function resetAdminSearch() {
         document.getElementById('adminSearchKeyword').value = '';
         document.getElementById('adminSearchDate').value = '';
@@ -228,18 +221,12 @@
             list.innerHTML = "";
             
             const filteredReviews = reviews.filter(r => {
-                // 通報フィルター
                 if (showOnlyReported && !r.is_reported) return false;
-                
-                // キーワードフィルター (店名または内容)
                 if (keyword && !r.shop.toLowerCase().includes(keyword) && !r.content.toLowerCase().includes(keyword)) return false;
-                
-                // 日付フィルター
                 if (searchDate) {
-                    const reviewDate = new Date(r.created_at).toLocaleDateString('sv-SE'); // YYYY-MM-DD形式
+                    const reviewDate = new Date(r.created_at).toLocaleDateString('sv-SE');
                     if (reviewDate !== searchDate) return false;
                 }
-                
                 return true;
             });
 
@@ -253,7 +240,6 @@
                 item.className = 'review-item';
                 const date = new Date(review.created_at).toLocaleString('ja-JP');
                 
-                // 返信データの取得 (個別にfetchするのが一番確実だぜ)
                 const cRes = await fetch(`/api/reviews/${review.id}/comments`);
                 const comments = await cRes.json();
                 let innerCommentsHtml = "";
