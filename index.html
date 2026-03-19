@@ -79,8 +79,10 @@
         .filter-btn { 
             background: white; border: 2px solid var(--hokkaido-blue); color: var(--hokkaido-blue); 
             padding: 10px 22px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            display: none; /* 🚀 初期状態は非表示に設定だッ！ */
         }
         .filter-btn.active { background: var(--hokkaido-blue); color: white; }
+        .filter-btn.has-content { display: inline-block; } /* 🚀 投稿がある時だけ出現ッ！ */
 
         .review-card { 
             background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; 
@@ -111,10 +113,17 @@
 
         .review-header, .total-rating-label, .review-date, .content-wrapper, .btn-group, .sns-share-bar { position: relative; z-index: 1; }
 
-        .sns-share-bar { display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; }
-        .share-btn { border: none; padding: 6px 12px; border-radius: 6px; color: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-        .btn-x { background-color: var(--x-black); }
-        .btn-insta { background: var(--insta-gradient); }
+        /* 🚀 豪華進化したSNSシェアボタンだッ！ */
+        .sns-share-bar { display: flex; gap: 10px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; flex-wrap: wrap; align-items: center; }
+        .share-btn { 
+            border: none; padding: 8px 16px; border-radius: 50px; color: white; font-size: 0.8rem; font-weight: bold; 
+            cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s;
+        }
+        .share-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+        .btn-x { background-color: var(--x-black); border: 1px solid #333; }
+        .btn-insta { background: var(--insta-gradient); position: relative; overflow: hidden; }
+        .btn-insta::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255,255,255,0.1); transform: rotate(45deg); pointer-events: none; }
 
         .content-wrapper { position: relative; line-height: 1.7; transition: 0.3s; }
         .content-wrapper.collapsed { max-height: 4.5em; overflow: hidden; }
@@ -269,11 +278,11 @@
     </div>
 
     <div class="filter-container">
-        <button class="filter-btn active" onclick="filterByArea('すべて', this)">すべて</button>
-        <button class="filter-btn" onclick="filterByArea('道央', this)">道央</button>
-        <button class="filter-btn" onclick="filterByArea('道南', this)">道南</button>
-        <button class="filter-btn" onclick="filterByArea('道北', this)">道北</button>
-        <button class="filter-btn" onclick="filterByArea('道東', this)">道東</button>
+        <button class="filter-btn active has-content" onclick="filterByArea('すべて', this)">すべて</button>
+        <button class="filter-btn" id="btn-道央" onclick="filterByArea('道央', this)">道央</button>
+        <button class="filter-btn" id="btn-道南" onclick="filterByArea('道南', this)">道南</button>
+        <button class="filter-btn" id="btn-道北" onclick="filterByArea('道北', this)">道北</button>
+        <button class="filter-btn" id="btn-道東" onclick="filterByArea('道東', this)">道東</button>
     </div>
 
     <div id="reviewList"></div>
@@ -337,9 +346,31 @@
             const response = await fetch('/api/reviews');
             allReviews = await response.json();
             updateRanking();
+            updateAreaFilters(); // 🚀 フィルター表示の更新だッ！
             runAdvancedFilter();
             loadColumns();
         } catch (error) { console.error(error); }
+    }
+
+    // 🚀 エリアフィルターの動的表示制御だッ！
+    function updateAreaFilters() {
+        const activeAreas = new Set(allReviews.map(r => r.area));
+        const areaButtons = ["道央", "道南", "道北", "道東"];
+        
+        areaButtons.forEach(area => {
+            const btn = document.getElementById(`btn-${area}`);
+            if (activeAreas.has(area)) {
+                btn.classList.add('has-content');
+            } else {
+                btn.classList.remove('has-content');
+                // もし今選択中のエリアが消えたら「すべて」に戻すぜ
+                if (currentArea === area) {
+                    currentArea = 'すべて';
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelector('.filter-btn[onclick*="すべて"]').classList.add('active');
+                }
+            }
+        });
     }
 
     function updateRanking() {
@@ -508,8 +539,8 @@
                 </div>
 
                 <div class="sns-share-bar">
-                    <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}" target="_blank" class="share-btn btn-x">Xでシェア</a>
-                    <button onclick="copyToClipboard('${shareUrl}')" class="share-btn btn-insta">URLコピー (インスタ用)</button>
+                    <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}" target="_blank" class="share-btn btn-x">X(Twitter)</a>
+                    <button onclick="copyToClipboard('${shareUrl}')" class="share-btn btn-insta">Instagram用コピー</button>
                     <button onclick="reportReview(${review.id})" style="background:none; border:none; color:#999; font-size:0.7rem; cursor:pointer; margin-left:auto;">🚩 削除依頼</button>
                 </div>
 
