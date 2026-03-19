@@ -13,13 +13,12 @@
         .dismiss-btn { background: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 5px; }
         .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #feb2b2; }
         
-        /* 🚀 センター配置と統計カードの修正だッ！ */
         .stats-grid { display: flex; justify-content: center; margin-bottom: 30px; }
         .stat-card { 
             background: #1a1a1a; color: #fff; padding: 1.5rem; border-radius: 12px; 
             text-align: center; border: 3px solid var(--jojo-purple); 
             box-shadow: 0 4px 15px rgba(75, 0, 130, 0.3);
-            width: 100%; max-width: 600px; /* カードをセンターに寄せるための幅制限だッ！ */
+            width: 100%; max-width: 600px;
         }
         .total-posts-val { font-size: 2rem; font-weight: 900; color: var(--jojo-gold); margin: 5px 0 15px 0; }
 
@@ -79,7 +78,6 @@
         if (!res.ok) throw new Error("統計取得失敗");
         const statsRes = await res.json();
         
-        // 🚀 総投稿数を計算するぜッ！
         const totalPosts = Object.values(statsRes.areas).reduce((a, b) => a + b, 0);
         
         content.innerHTML = `
@@ -222,19 +220,26 @@
         }
     }
 
+    // 🚀 バグを消し飛ばした最新のフィルター機能だッ！
     async function applyFilter() {
         const list = document.getElementById('adminList');
         const keyword = document.getElementById('adminSearchKeyword').value.toLowerCase();
         const searchDate = document.getElementById('adminSearchDate').value;
         const showOnlyReported = document.getElementById('reportFilter').checked;
         
-        list.innerHTML = "解析中...";
+        // 🚀 二重表示を防ぐためにまず中身を空にする
+        list.innerHTML = "読み込み中...";
         
         try {
-            const res = await fetch('/api/reviews');
-            const reviews = await res.json();
-            list.innerHTML = "";
+            // 🚀 口コミと返信を一気に取得してメモリ上で処理するぜッ！
+            const [revRes, comRes] = await Promise.all([
+                fetch('/api/reviews'),
+                fetch('/api/admin/reported-comments') // 全返信取得APIがない場合は工夫が必要だが、一旦レビュー側で調整
+            ]);
             
+            const reviews = await revRes.json();
+            
+            // 🚀 フィルター処理
             const filteredReviews = reviews.filter(r => {
                 if (showOnlyReported && !r.is_reported) return false;
                 if (keyword && !r.shop.toLowerCase().includes(keyword) && !r.content.toLowerCase().includes(keyword)) return false;
@@ -250,16 +255,37 @@
                 return;
             }
 
+            // 🚀 HTMLを文字列として構築して最後に一気に流し込む（これが重複防止の秘訣だッ！）
+            let htmlBuffer = "";
+            
             for (const review of filteredReviews) {
-                const item = document.createElement('div');
-                item.className = 'review-item';
                 const date = new Date(review.created_at).toLocaleString('ja-JP');
+                const reportAlert = review.is_reported ? `
+                    <div class="report-badge">⚠️ 理由: ${review.report_reason} <button class="dismiss-btn" onclick="dismissReport(${review.id})">却下</button></div>` : '';
                 
+                htmlBuffer += `
+                    <div class="review-item">
+                        <div class="item-main">
+                            <div style="flex-grow:1;">
+                                <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">🗓️ ${date}</small></div>
+                                <div style="background:#fff; padding:5px; border-radius:4px; font-size:0.9rem; color:#666; margin-top:5px; border:1px solid #f0f0f0;">${review.content}</div>
+                                <div id="inner-comments-${review.id}"></div> ${reportAlert}
+                            </div>
+                            <button class="delete-btn" onclick="deleteReview(${review.id})">投稿削除</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            list.innerHTML = htmlBuffer;
+
+            // 🚀 各投稿に紐づく返信を非同期で流し込む（描画済みの枠に対して行うぜ）
+            filteredReviews.forEach(async (review) => {
                 const cRes = await fetch(`/api/reviews/${review.id}/comments`);
                 const comments = await cRes.json();
-                let innerCommentsHtml = "";
-                if (comments.length > 0) {
-                    innerCommentsHtml = `
+                const targetDiv = document.getElementById(`inner-comments-${review.id}`);
+                if (targetDiv && comments.length > 0) {
+                    targetDiv.innerHTML = `
                         <div class="inner-comment-list">
                             <small style="color:#888;">💬 この投稿への返信:</small>
                             ${comments.map(c => `
@@ -271,24 +297,12 @@
                         </div>
                     `;
                 }
+            });
 
-                const reportAlert = review.is_reported ? `
-                    <div class="report-badge">⚠️ 理由: ${review.report_reason} <button class="dismiss-btn" onclick="dismissReport(${review.id})">却下</button></div>` : '';
-                
-                item.innerHTML = `
-                    <div class="item-main">
-                        <div style="flex-grow:1;">
-                            <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">🗓️ ${date}</small></div>
-                            <div style="background:#fff; padding:5px; border-radius:4px; font-size:0.9rem; color:#666; margin-top:5px; border:1px solid #f0f0f0;">${review.content}</div>
-                            ${innerCommentsHtml}
-                            ${reportAlert}
-                        </div>
-                        <button class="delete-btn" onclick="deleteReview(${review.id})">投稿削除</button>
-                    </div>
-                `;
-                list.appendChild(item);
-            }
-        } catch (err) { list.innerHTML = "読み込み失敗だぜッ！"; }
+        } catch (err) { 
+            console.error(err);
+            list.innerHTML = "読み込み失敗だぜッ！"; 
+        }
     }
 
     async function deleteReview(id) { if (confirm("この投稿（および紐づく返信）をすべて消すぜ？")) { await fetch(`/api/reviews/${id}`, { method: 'DELETE' }); applyFilter(); } }
