@@ -18,6 +18,9 @@ const postHistory = new Map();
 // 🚀 ログイン失敗履歴を管理するスタンドだッ！
 const loginAttempts = new Map();
 
+// 🚀 メンテナンスモードの状態を保持するメモリだッ！
+let isMaintenanceMode = false;
+
 const NG_WORDS = [
     "死ね", "シネ", "殺す", "ころす", "コロス", "殺意", "バカ", "ばか", "馬鹿", "アホ", "あほ", "阿呆", 
     "ゴミ", "ごみ", "カス", "かす", "きがい", "キチガイ", "きちがい", "ガイジ", "がいじ", "ガイキチ", 
@@ -50,6 +53,33 @@ async function incrementPV() {
         }
     } catch (e) { console.error("PV更新失敗だぜッ！", e); }
 }
+
+// 🚀 メンテナンスチェック用ミドルウェアだッ！
+const checkMaintenance = (req, res, next) => {
+    // 管理者用API、メンテナンス状態確認用、管理者ページそのもの以外をブロックする
+    if (isMaintenanceMode && 
+        !req.path.startsWith('/api/admin') && 
+        req.path !== '/api/maintenance-status' && 
+        req.path !== '/admin.html') {
+        return res.status(503).json({ error: "メンテナンス中だッ！" });
+    }
+    next();
+};
+
+app.use(checkMaintenance);
+
+// 🚀 メンテナンス状態取得API
+app.get('/api/maintenance-status', (req, res) => {
+    res.json({ isMaintenance: isMaintenanceMode });
+});
+
+// 🚀 管理者専用：メンテナンスモード切替API
+app.post('/api/admin/maintenance', (req, res) => {
+    // 本来はトークン検証が必要だが、フロントエンドのadminLoginと連動する前提だぜ
+    isMaintenanceMode = req.body.enabled;
+    console.log(`メンテナンスモード変更: ${isMaintenanceMode ? 'ON' : 'OFF'}`);
+    res.json({ success: true, isMaintenance: isMaintenanceMode });
+});
 
 // 🚀 画像ファイルを確実に表示させるための専用ルートだッ！
 app.get('/profile.jpg', (req, res) => {

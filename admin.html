@@ -13,12 +13,13 @@
         .dismiss-btn { background: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 5px; }
         .report-badge { color: red; font-weight: bold; background: #fff0f0; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #feb2b2; }
         
+        /* 🚀 センター配置と統計カードの修正だッ！ */
         .stats-grid { display: flex; justify-content: center; margin-bottom: 30px; }
         .stat-card { 
             background: #1a1a1a; color: #fff; padding: 1.5rem; border-radius: 12px; 
             text-align: center; border: 3px solid var(--jojo-purple); 
             box-shadow: 0 4px 15px rgba(75, 0, 130, 0.3);
-            width: 100%; max-width: 600px;
+            width: 100%; max-width: 600px; /* カードをセンターに寄せるための幅制限だッ！ */
         }
         .total-posts-val { font-size: 2rem; font-weight: 900; color: var(--jojo-gold); margin: 5px 0 15px 0; }
 
@@ -78,6 +79,7 @@
         if (!res.ok) throw new Error("統計取得失敗");
         const statsRes = await res.json();
         
+        // 🚀 総投稿数を計算するぜッ！
         const totalPosts = Object.values(statsRes.areas).reduce((a, b) => a + b, 0);
         
         content.innerHTML = `
@@ -90,6 +92,16 @@
                     <div style="font-size: 0.9rem; text-align:center; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
                         ${Object.entries(statsRes.areas).map(([area, count]) => `<span><b>${area}</b>: ${count}件</span>`).join('')}
                     </div>
+                </div>
+            </div>
+
+            <div class="stats-grid" style="margin-top: 20px;">
+                <div class="stat-card" style="border-color: var(--warning-red);">
+                    <div style="font-weight:bold; color:var(--warning-red);">⚠️ 緊急システム制御</div>
+                    <div style="margin: 15px 0;">
+                        <span id="mtStatusText" style="font-weight:bold; font-size:1.2rem;">状態: 取得中...</span>
+                    </div>
+                    <button id="mtBtn" class="delete-btn" style="width:200px; padding:10px;" onclick="toggleMaintenance()">切り替え</button>
                 </div>
             </div>
 
@@ -129,6 +141,46 @@
         applyFilter(); 
         loadReportedComments(); 
         loadAdminColumns(); 
+        
+        // 🚀 メンテナンス初期状態の取得
+        const mtRes = await fetch('/api/maintenance-status');
+        const mtData = await mtRes.json();
+        updateMaintenanceUI(mtData.isMaintenance);
+    }
+
+    // 🚀 メンテナンス切替
+    async function toggleMaintenance() {
+        const isMaintenance = document.getElementById('mtStatusText').innerText.includes('メンテナンス中');
+        const newState = !isMaintenance;
+        
+        if (!confirm(newState ? "全ユーザーを締め出し、メンテナンスを開始するか？" : "メンテナンスを終了し、一般公開を再開するか？")) return;
+
+        const res = await fetch('/api/admin/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: newState })
+        });
+        
+        if (res.ok) {
+            updateMaintenanceUI(newState);
+            alert(newState ? "“ザ・ワールド”！ 公開を停止したぜッ！" : "時は動き出す……公開を再開したぜッ！");
+        }
+    }
+
+    function updateMaintenanceUI(enabled) {
+        const text = document.getElementById('mtStatusText');
+        const btn = document.getElementById('mtBtn');
+        if (enabled) {
+            text.innerText = "状態: ⚠️ メンテナンス中";
+            text.style.color = "var(--warning-red)";
+            btn.innerText = "公開を再開する";
+            btn.style.backgroundColor = "#4caf50";
+        } else {
+            text.innerText = "状態: ✅ 稼働中";
+            text.style.color = "#4caf50";
+            btn.innerText = "メンテナンス開始";
+            btn.style.backgroundColor = "var(--warning-red)";
+        }
     }
 
     function resetAdminSearch() {
@@ -231,12 +283,8 @@
         list.innerHTML = "読み込み中...";
         
         try {
-            // 🚀 口コミと返信を一気に取得してメモリ上で処理するぜッ！
-            const [revRes, comRes] = await Promise.all([
-                fetch('/api/reviews'),
-                fetch('/api/admin/reported-comments') // 全返信取得APIがない場合は工夫が必要だが、一旦レビュー側で調整
-            ]);
-            
+            // 🚀 口コミを取得
+            const revRes = await fetch('/api/reviews');
             const reviews = await revRes.json();
             
             // 🚀 フィルター処理
@@ -255,9 +303,8 @@
                 return;
             }
 
-            // 🚀 HTMLを文字列として構築して最後に一気に流し込む（これが重複防止の秘訣だッ！）
+            // 🚀 HTMLを構築
             let htmlBuffer = "";
-            
             for (const review of filteredReviews) {
                 const date = new Date(review.created_at).toLocaleString('ja-JP');
                 const reportAlert = review.is_reported ? `
@@ -279,7 +326,7 @@
             
             list.innerHTML = htmlBuffer;
 
-            // 🚀 各投稿に紐づく返信を非同期で流し込む（描画済みの枠に対して行うぜ）
+            // 🚀 返信を流し込む
             filteredReviews.forEach(async (review) => {
                 const cRes = await fetch(`/api/reviews/${review.id}/comments`);
                 const comments = await cRes.json();

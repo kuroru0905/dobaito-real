@@ -343,6 +343,11 @@
     async function loadReviews() {
         try {
             const response = await fetch('/api/reviews');
+            // 🚀 もしメンテナンス中ならエラーが返ってくるぜ
+            if (response.status === 503) {
+                await checkMaintenance();
+                return;
+            }
             allReviews = await response.json();
             updateRanking();
             updateAreaFilters();
@@ -632,7 +637,32 @@
         } catch (error) { console.error(error); }
     }
 
-    document.addEventListener('DOMContentLoaded', loadReviews);
+    // 🚀 メンテナンスモードを検知して画面をロックするロジックだッ！
+    async function checkMaintenance() {
+        try {
+            const res = await fetch('/api/maintenance-status');
+            const data = await res.json();
+            if (data.isMaintenance) {
+                document.body.innerHTML = `
+                    <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--jojo-purple); color:white; text-align:center; padding:2rem;">
+                        <h1 style="font-size:3rem; color:var(--jojo-gold);">⚠️ MAINTENANCE</h1>
+                        <p style="font-size:1.5rem; margin:1rem 0;">現在、サイトのスタンド能力を調整中だッ！</p>
+                        <p>管理者 KURORU が「“真実”」を整理している。しばし待て。</p>
+                        <div style="margin-top:2rem; font-size:5rem; animation: rotate 2s linear infinite;">⏳</div>
+                        <style>@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                    </div>
+                `;
+                return true;
+            }
+        } catch (e) { console.error("通信エラー", e); }
+        return false;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 🚀 最初にメンテナンス状態をチェックするぜッ！
+        if (await checkMaintenance()) return;
+        loadReviews();
+    });
 </script>
 </body>
 </html>
