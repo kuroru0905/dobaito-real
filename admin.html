@@ -17,14 +17,16 @@
         .stat-val { font-size: 2.5rem; font-weight: 900; margin: 10px 0; }
         h2 { border-left: 8px solid var(--jojo-purple); padding-left: 15px; margin-top: 40px; color: var(--jojo-purple); }
         .tag-date { font-size: 0.8rem; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; }
-        /* 🚀 投稿内返信リスト用のスタイル */
         .inner-comment-list { margin-top: 15px; padding-left: 20px; border-left: 3px solid #ddd; }
         .inner-comment-item { background: #f9f9f9; padding: 8px; border-radius: 6px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        
-        /* 🚀 コラム投稿フォーム用スタイル */
         .column-form { background: #f9f9f9; padding: 1.5rem; border-radius: 12px; border: 2px solid var(--jojo-purple); margin-bottom: 20px; }
         .column-form input, .column-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .column-btn { background: var(--jojo-purple); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* 🚀 検索パネル用のスタイルだッ！ */
+        .search-panel { background: #eee; padding: 1rem; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .search-panel input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .search-panel label { font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -96,20 +98,40 @@
             <div id="adminCommentList" style="margin-bottom: 40px;">読み込み中...</div>
 
             <h2>📦 投稿管理リスト (Reviews)</h2>
-            <div style="margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 8px;">
-                <label style="font-weight: bold; cursor: pointer;">
-                    <input type="checkbox" id="reportFilter" onchange="applyFilter()"> 🚩 削除依頼があった投稿のみ表示
-                </label>
+            
+            <div class="search-panel">
+                <div>
+                    <label>🔍 キーワード:</label>
+                    <input type="text" id="adminSearchKeyword" placeholder="店名・内容..." oninput="applyFilter()">
+                </div>
+                <div>
+                    <label>🗓️ 日付:</label>
+                    <input type="date" id="adminSearchDate" onchange="applyFilter()">
+                </div>
+                <div style="flex-grow:1; text-align:right;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="reportFilter" onchange="applyFilter()"> 🚩 通報のみ
+                    </label>
+                </div>
+                <button onclick="resetAdminSearch()" style="font-size:0.7rem;">リセット</button>
             </div>
+
             <div id="adminList"></div>
             <br><button onclick="logout()">ログアウト</button>
         `;
         applyFilter(); 
         loadReportedComments(); 
-        loadAdminColumns(); // 🚀 管理用コラムリストも読み込むぜッ！
+        loadAdminColumns(); 
     }
 
-    // 🚀 コラム投稿API呼び出し
+    // 🚀 検索リセット機能
+    function resetAdminSearch() {
+        document.getElementById('adminSearchKeyword').value = '';
+        document.getElementById('adminSearchDate').value = '';
+        document.getElementById('reportFilter').checked = false;
+        applyFilter();
+    }
+
     async function postColumn() {
         const title = document.getElementById('colTitle').value.trim();
         const content = document.getElementById('colContent').value.trim();
@@ -131,7 +153,6 @@
         }
     }
 
-    // 🚀 管理用コラムリスト読み込み
     async function loadAdminColumns() {
         const list = document.getElementById('adminColumnList');
         const res = await fetch('/api/columns');
@@ -195,20 +216,44 @@
 
     async function applyFilter() {
         const list = document.getElementById('adminList');
+        const keyword = document.getElementById('adminSearchKeyword').value.toLowerCase();
+        const searchDate = document.getElementById('adminSearchDate').value;
         const showOnlyReported = document.getElementById('reportFilter').checked;
-        list.innerHTML = "読み込み中...";
+        
+        list.innerHTML = "解析中...";
         
         try {
             const res = await fetch('/api/reviews');
             const reviews = await res.json();
             list.innerHTML = "";
-            const filteredReviews = showOnlyReported ? reviews.filter(r => r.is_reported) : reviews;
+            
+            const filteredReviews = reviews.filter(r => {
+                // 通報フィルター
+                if (showOnlyReported && !r.is_reported) return false;
+                
+                // キーワードフィルター (店名または内容)
+                if (keyword && !r.shop.toLowerCase().includes(keyword) && !r.content.toLowerCase().includes(keyword)) return false;
+                
+                // 日付フィルター
+                if (searchDate) {
+                    const reviewDate = new Date(r.created_at).toLocaleDateString('sv-SE'); // YYYY-MM-DD形式
+                    if (reviewDate !== searchDate) return false;
+                }
+                
+                return true;
+            });
+
+            if (filteredReviews.length === 0) {
+                list.innerHTML = "<p style='color:#999; padding:20px;'>該当する投稿は見つからねえぜッ！</p>";
+                return;
+            }
 
             for (const review of filteredReviews) {
                 const item = document.createElement('div');
                 item.className = 'review-item';
                 const date = new Date(review.created_at).toLocaleString('ja-JP');
                 
+                // 返信データの取得 (個別にfetchするのが一番確実だぜ)
                 const cRes = await fetch(`/api/reviews/${review.id}/comments`);
                 const comments = await cRes.json();
                 let innerCommentsHtml = "";
@@ -233,7 +278,7 @@
                     <div class="item-main">
                         <div style="flex-grow:1;">
                             <div><b>${review.shop}</b> [${review.area}] <small class="tag-date">🗓️ ${date}</small></div>
-                            <div style="font-size:0.9rem; color:#666; margin-top:5px;">${review.content}</div>
+                            <div style="background:#fff; padding:5px; border-radius:4px; font-size:0.9rem; color:#666; margin-top:5px; border:1px solid #f0f0f0;">${review.content}</div>
                             ${innerCommentsHtml}
                             ${reportAlert}
                         </div>
