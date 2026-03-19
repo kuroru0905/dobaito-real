@@ -644,12 +644,18 @@
             const data = await res.json();
             if (data.isMaintenance) {
                 document.body.innerHTML = `
-                    <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--jojo-purple); color:white; text-align:center; padding:2rem;">
-                        <h1 style="font-size:3rem; color:var(--jojo-gold);">⚠️ MAINTENANCE</h1>
-                        <p style="font-size:1.5rem; margin:1rem 0;">現在、サイトのスタンド能力を調整中だッ！</p>
-                        <p>管理者 KURORU が「“真実”」を整理している。しばし待て。</p>
-                        <div style="margin-top:2rem; font-size:5rem; animation: rotate 2s linear infinite;">⏳</div>
-                        <style>@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                    <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background-color:#fff; color:#555; text-align:center; padding:2rem; font-family: sans-serif;">
+                        <div style="max-width: 500px; padding: 3rem; border-radius: 20px; background: #f8f9fa; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                            <div style="font-size: 4rem; margin-bottom: 1.5rem;">🚧</div>
+                            <h1 style="font-size:1.8rem; color:#333; margin-bottom: 1rem;">現在メンテナンス中です</h1>
+                            <p style="font-size:1.05rem; line-height:1.6; margin-bottom: 1.5rem; color: #777;">
+                                いつも「道バイト・リアル」をご利用いただきありがとうございます。<br>
+                                現在、より良いサービスを提供するためシステムメンテナンスを行っております。
+                            </p>
+                            <p style="font-size:0.9rem; color:#999; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                                作業完了までしばらくお待ちください。
+                            </p>
+                        </div>
                     </div>
                 `;
                 return true;
